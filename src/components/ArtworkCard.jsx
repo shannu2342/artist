@@ -1,9 +1,26 @@
-import React from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import './ArtworkCard.css';
 import watermarkLogo from '../assets/logo2.png';
 import { resolveImageUrl } from '../utils/api';
 
 const ArtworkCard = ({ artwork, onWhatsAppClick }) => {
+    const images = useMemo(() => artwork.images || [artwork.image], [artwork.images, artwork.image]);
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const touchStartX = useRef(null);
+    const touchStartY = useRef(null);
+
+    useEffect(() => {
+        setCurrentIndex(0);
+    }, [artwork._id]);
+
+    useEffect(() => {
+        images.forEach((image) => {
+            const preloaded = new Image();
+            preloaded.decoding = 'async';
+            preloaded.src = resolveImageUrl(image);
+        });
+    }, [images]);
+
     const handleContextMenu = (e) => {
         e.preventDefault();
         return false;
@@ -14,17 +31,59 @@ const ArtworkCard = ({ artwork, onWhatsAppClick }) => {
         return false;
     };
 
-    const images = artwork.images || [artwork.image];
+    const handlePrevImage = (e) => {
+        e.stopPropagation();
+        setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+    };
+
+    const handleNextImage = (e) => {
+        e.stopPropagation();
+        setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+    };
+
+    const handleTouchStart = (e) => {
+        if (images.length <= 1) return;
+        touchStartX.current = e.touches[0].clientX;
+        touchStartY.current = e.touches[0].clientY;
+    };
+
+    const handleTouchEnd = (e) => {
+        if (images.length <= 1 || touchStartX.current === null || touchStartY.current === null) return;
+
+        const endX = e.changedTouches[0].clientX;
+        const endY = e.changedTouches[0].clientY;
+        const diffX = touchStartX.current - endX;
+        const diffY = touchStartY.current - endY;
+
+        touchStartX.current = null;
+        touchStartY.current = null;
+
+        if (Math.abs(diffX) < 40 || Math.abs(diffY) > Math.abs(diffX)) {
+            return;
+        }
+
+        setCurrentIndex((prev) => {
+            if (diffX > 0) {
+                return prev === images.length - 1 ? 0 : prev + 1;
+            }
+            return prev === 0 ? images.length - 1 : prev - 1;
+        });
+    };
 
     return (
         <div className="artwork-card">
-            <div className="artwork-image-container">
+            <div
+                className="artwork-image-container"
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
+            >
                 <img
-                    src={resolveImageUrl(images[0])}
+                    src={resolveImageUrl(images[currentIndex])}
                     alt={artwork.title}
                     className="artwork-image"
-                    loading="lazy"
+                    loading="eager"
                     decoding="async"
+                    fetchPriority="high"
                     onContextMenu={handleContextMenu}
                     onDragStart={handleDragStart}
                     draggable={false}
@@ -34,6 +93,26 @@ const ArtworkCard = ({ artwork, onWhatsAppClick }) => {
                         <i className="fas fa-images"></i>
                         <span>{images.length} images</span>
                     </div>
+                )}
+                {images.length > 1 && (
+                    <>
+                        <button
+                            type="button"
+                            className="artwork-image-nav artwork-image-prev"
+                            onClick={handlePrevImage}
+                            aria-label="Previous image"
+                        >
+                            <i className="fas fa-chevron-left"></i>
+                        </button>
+                        <button
+                            type="button"
+                            className="artwork-image-nav artwork-image-next"
+                            onClick={handleNextImage}
+                            aria-label="Next image"
+                        >
+                            <i className="fas fa-chevron-right"></i>
+                        </button>
+                    </>
                 )}
                 <div className="watermark-overlay">
                     <img src={watermarkLogo} alt="Watermark logo" className="watermark-logo" />

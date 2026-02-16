@@ -15,8 +15,9 @@
 .artwork-image-container {
     position: relative;
     overflow: hidden;
-    aspect-ratio: 1;
+    aspect-ratio: 4 / 3;
     background: var(--bg-light);
+    touch-action: pan-y;
 }
 
 .artwork-image {
@@ -76,12 +77,45 @@
     font-size: 1rem;
 }
 
+.artwork-image-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0, 0, 0, 0.65);
+    color: #fff;
+    cursor: pointer;
+    z-index: 24;
+    display: grid;
+    place-items: center;
+}
+
+.artwork-image-prev {
+    left: 0.75rem;
+}
+
+.artwork-image-next {
+    right: 0.75rem;
+}
+
+.artwork-image-nav:hover {
+    background: rgba(0, 0, 0, 0.85);
+}
+
 @media (max-width: 768px) {
     .watermark-overlay {
         bottom: 0.5rem;
         right: 0.5rem;
         width: 56px;
         height: 56px;
+    }
+
+    .artwork-image-nav {
+        width: 30px;
+        height: 30px;
     }
 }
 
