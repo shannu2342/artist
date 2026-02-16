@@ -16,3 +16,34 @@ export const resolveImageUrl = (url = '') => {
   }
   return apiUrl(encodeURI(url));
 };
+
+export const getResponsiveImage = (imageOrVariants, sizes = '100vw') => {
+  if (!imageOrVariants) {
+    return { src: '', srcSet: '', sizes: '' };
+  }
+
+  if (typeof imageOrVariants === 'string') {
+    return {
+      src: resolveImageUrl(imageOrVariants),
+      srcSet: '',
+      sizes: ''
+    };
+  }
+
+  const sm = resolveImageUrl(imageOrVariants.sm || '');
+  const md = resolveImageUrl(imageOrVariants.md || '');
+  const lg = resolveImageUrl(imageOrVariants.lg || imageOrVariants.default || '');
+  const src = resolveImageUrl(imageOrVariants.default || imageOrVariants.lg || imageOrVariants.md || imageOrVariants.sm || '');
+
+  const srcSet = [
+    sm ? `${sm} 640w` : '',
+    md ? `${md} 1080w` : '',
+    lg ? `${lg} 1600w` : ''
+  ].filter(Boolean).join(', ');
+
+  return {
+    src,
+    srcSet,
+    sizes: srcSet ? sizes : ''
+  };
+};

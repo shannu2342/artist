@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './ManagePaintings.css';
-import { resolveImageUrl } from '../utils/api';
+import { getResponsiveImage, resolveImageUrl } from '../utils/api';
 
 const ManagePaintings = ({ gallery, onDeleteArtwork, onUpdateArtwork }) => {
     const navigate = useNavigate();
@@ -136,12 +136,21 @@ const ManagePaintings = ({ gallery, onDeleteArtwork, onUpdateArtwork }) => {
                             orderedPaintings.map((painting, index) => (
                                 <div key={painting._id} className="painting-card">
                                     <div className="painting-image">
-                                        <img
-                                            src={resolveImageUrl(painting.images ? painting.images[0] : painting.image)}
-                                            alt={painting.title}
-                                            loading="lazy"
-                                            decoding="async"
-                                        />
+                                        {(() => {
+                                            const firstImage = painting.images ? painting.images[0] : painting.image;
+                                            const firstVariant = painting.imageVariants && painting.imageVariants[0];
+                                            const source = getResponsiveImage(firstVariant || firstImage, '280px');
+                                            return (
+                                                <img
+                                                    src={source.src || resolveImageUrl(firstImage)}
+                                                    srcSet={source.srcSet || undefined}
+                                                    sizes={source.sizes || undefined}
+                                                    alt={painting.title}
+                                                    loading="lazy"
+                                                    decoding="async"
+                                                />
+                                            );
+                                        })()}
                                         {painting.featured && (
                                             <div className="featured-badge">
                                                 <i className="fas fa-star"></i>

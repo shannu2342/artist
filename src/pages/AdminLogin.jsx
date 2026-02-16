@@ -49,124 +49,82 @@ const AdminLogin = ({ onLogin }) => {
     };
 
     return (
-        <div className="admin-login">
-            <div className="login-shell">
-                <div className="login-panel">
-                    <div className="panel-badge">
-                        <i className="fas fa-palette"></i>
-                        <span>Artist Admin</span>
-                    </div>
-                    <h1>Manage Aurexon</h1>
-                    <p>Upload new works, curate your gallery, and update hero content in one place.</p>
-                    <div className="panel-strip"></div>
-                    <div className="panel-stats">
-                        <div>
-                            <strong>01</strong>
-                            <span>Upload Artwork</span>
-                        </div>
-                        <div>
-                            <strong>02</strong>
-                            <span>Feature Pieces</span>
-                        </div>
-                        <div>
-                            <strong>03</strong>
-                            <span>Publish Updates</span>
-                        </div>
-                    </div>
+        <div className="admin-login-v2">
+            <div className="login-backdrop-shape shape-a" aria-hidden="true"></div>
+            <div className="login-backdrop-shape shape-b" aria-hidden="true"></div>
+
+            <div className="admin-login-card">
+                <div className="admin-login-head">
+                    <p className="admin-login-kicker">Aurexon Admin</p>
+                    <h1>Sign in</h1>
+                    <p className="admin-login-subtitle">Access dashboard controls, uploads, and portfolio management.</p>
                 </div>
 
-                <div className="login-card">
-                    <div className="login-header">
-                        <div className="login-icon">
-                            <i className="fas fa-crown"></i>
-                        </div>
-                        <div>
-                            <h2>Admin Login</h2>
-                            <p>Sign in to manage the portfolio.</p>
-                        </div>
+                {error && (
+                    <div className="admin-login-error" role="alert">
+                        <i className="fas fa-circle-exclamation"></i>
+                        <span>{error}</span>
+                    </div>
+                )}
+
+                <form className="admin-login-form" onSubmit={handleSubmit}>
+                    <label htmlFor="email" className="admin-login-label">Email</label>
+                    <div className="admin-input-wrap">
+                        <i className="fas fa-envelope"></i>
+                        <input
+                            type="email"
+                            id="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="Artist@login.com"
+                            required
+                        />
                     </div>
 
-                    {error && (
-                        <div className="error-message">
-                            <i className="fas fa-exclamation-circle"></i>
-                            <span>{error}</span>
-                        </div>
-                    )}
-
-                    <form className="login-form" onSubmit={handleSubmit}>
-                        <div className="form-group">
-                            <label htmlFor="email">Email Address</label>
-                            <div className="input-group">
-                                <i className="fas fa-envelope"></i>
-                                <input
-                                    type="email"
-                                    id="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="Artist@login.com"
-                                    required
-                                />
-                            </div>
-                        </div>
-
-                        <div className="form-group">
-                            <label htmlFor="password">Password</label>
-                            <div className="input-group">
-                                <i className="fas fa-lock"></i>
-                                <input
-                                    type={showPassword ? 'text' : 'password'}
-                                    id="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="Enter your password"
-                                    required
-                                />
-                                <button
-                                    type="button"
-                                    className="show-password-btn"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                                >
-                                    <i className={`fas fa-${showPassword ? 'eye-slash' : 'eye'}`}></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="form-options">
-                            <label className="checkbox-label">
-                                <input
-                                    type="checkbox"
-                                    checked={remember}
-                                    onChange={(e) => setRemember(e.target.checked)}
-                                />
-                                <span className="checkmark"></span>
-                                Remember me
-                            </label>
-                        </div>
-
+                    <label htmlFor="password" className="admin-login-label">Password</label>
+                    <div className="admin-input-wrap">
+                        <i className="fas fa-lock"></i>
+                        <input
+                            type={showPassword ? 'text' : 'password'}
+                            id="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="Enter your password"
+                            required
+                        />
                         <button
-                            type="submit"
-                            className="login-button"
-                            disabled={isLoading}
+                            type="button"
+                            className="toggle-password"
+                            onClick={() => setShowPassword(!showPassword)}
+                            aria-label={showPassword ? 'Hide password' : 'Show password'}
                         >
-                            {isLoading ? (
-                                <>
-                                    <i className="fas fa-spinner fa-spin"></i>
-                                    <span>Logging in...</span>
-                                </>
-                            ) : (
-                                <>
-                                    <i className="fas fa-sign-in-alt"></i>
-                                    <span>Login</span>
-                                </>
-                            )}
+                            <i className={`fas fa-${showPassword ? 'eye-slash' : 'eye'}`}></i>
                         </button>
-                    </form>
-
-                    <div className="login-footer">
-                        Use your admin credentials to access the dashboard.
                     </div>
-                </div>
+
+                    <label className="remember-row">
+                        <input
+                            type="checkbox"
+                            checked={remember}
+                            onChange={(e) => setRemember(e.target.checked)}
+                        />
+                        <span>Remember me</span>
+                    </label>
+
+                    <button type="submit" className="admin-login-btn" disabled={isLoading}>
+                        {isLoading ? (
+                            <>
+                                <i className="fas fa-spinner fa-spin"></i>
+                                <span>Signing in...</span>
+                            </>
+                        ) : (
+                            <>
+                                <i className="fas fa-right-to-bracket"></i>
+                                <span>Login to Dashboard</span>
+                            </>
+                        )}
+                    </button>
+                </form>
             </div>
         </div>
     );

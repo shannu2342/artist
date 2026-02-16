@@ -5,9 +5,9 @@ import './HomePage.css';
 import heroImage1 from '../assets/image1.jpeg';
 import heroImage2 from '../assets/image2.jpeg';
 import heroImage3 from '../assets/image3.jpeg';
-import { resolveImageUrl } from '../utils/api';
+import { getResponsiveImage, resolveImageUrl } from '../utils/api';
 
-const HomePage = ({ gallery, whatsAppNumber, heroImages = [], artistProfile }) => {
+const HomePage = ({ gallery, whatsAppNumber, heroImages = [], heroImageVariants = [], artistProfile }) => {
     const featuredList = gallery.filter((artwork) => artwork.featured);
     const featuredArtworks = (featuredList.length > 0 ? featuredList : gallery).slice(0, 6);
     const heroTrackRef = useRef(null);
@@ -44,13 +44,20 @@ const HomePage = ({ gallery, whatsAppNumber, heroImages = [], artistProfile }) =
                     <div className="hero-track" ref={heroTrackRef}>
                         {heroSlides.map((image, index) => (
                             <div className="hero-slide" key={image}>
+                                {(() => {
+                                    const source = getResponsiveImage(heroImageVariants[index] || image, '100vw');
+                                    return (
                                 <img
-                                    src={resolveImageUrl(image)}
+                                    src={source.src || resolveImageUrl(image)}
+                                    srcSet={source.srcSet || undefined}
+                                    sizes={source.sizes || undefined}
                                     alt={`Hero ${index + 1}`}
                                     loading={index === 0 ? 'eager' : 'lazy'}
                                     decoding="async"
                                     fetchPriority={index === 0 ? 'high' : 'auto'}
                                 />
+                                    );
+                                })()}
                                 <div className="hero-overlay">
                                     <div className="hero-text">
                                         <h1 className="hero-title">
@@ -153,14 +160,24 @@ const HomePage = ({ gallery, whatsAppNumber, heroImages = [], artistProfile }) =
                         </div>
                         <div className="about-image">
                             {artistProfile?.image ? (
-                                <img
-                                    className="artist-photo"
-                                    src={resolveImageUrl(artistProfile.image)}
-                                    alt={artistProfile?.name || 'Artist'}
-                                    loading="eager"
-                                    decoding="async"
-                                    fetchPriority="high"
-                                />
+                                (() => {
+                                    const source = getResponsiveImage(
+                                        artistProfile?.imageVariants || artistProfile?.image,
+                                        '(max-width: 768px) 90vw, 320px'
+                                    );
+                                    return (
+                                        <img
+                                            className="artist-photo"
+                                            src={source.src || resolveImageUrl(artistProfile.image)}
+                                            srcSet={source.srcSet || undefined}
+                                            sizes={source.sizes || undefined}
+                                            alt={artistProfile?.name || 'Artist'}
+                                            loading="eager"
+                                            decoding="async"
+                                            fetchPriority="high"
+                                        />
+                                    );
+                                })()
                             ) : (
                                 <div className="artist-placeholder">
                                     <i className="fas fa-palette"></i>

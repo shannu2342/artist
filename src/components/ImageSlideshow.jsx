@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import './ImageSlideshow.css';
 import watermarkLogo from '../assets/logo2.png';
-import { resolveImageUrl } from '../utils/api';
+import { getResponsiveImage, resolveImageUrl } from '../utils/api';
 
-const ImageSlideshow = ({ images, alt }) => {
+const ImageSlideshow = ({ images, imageVariants = [], alt }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
 
     const handlePrev = () => {
@@ -40,8 +40,16 @@ const ImageSlideshow = ({ images, alt }) => {
                         key={index}
                         className={`slide ${index === currentIndex ? 'active' : ''}`}
                     >
+                        {(() => {
+                            const source = getResponsiveImage(
+                                imageVariants[index] || image,
+                                '(max-width: 768px) 100vw, 80vw'
+                            );
+                            return (
                         <img
-                            src={resolveImageUrl(image)}
+                            src={source.src || resolveImageUrl(image)}
+                            srcSet={source.srcSet || undefined}
+                            sizes={source.sizes || undefined}
                             alt={`${alt} - Image ${index + 1}`}
                             loading={index === currentIndex ? 'eager' : 'lazy'}
                             decoding="async"
@@ -50,6 +58,8 @@ const ImageSlideshow = ({ images, alt }) => {
                             onDragStart={handleDragStart}
                             draggable={false}
                         />
+                            );
+                        })()}
                         <div className="watermark-overlay">
                             <img src={watermarkLogo} alt="Watermark logo" className="watermark-logo" />
                         </div>

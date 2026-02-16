@@ -125,7 +125,7 @@
     bottom: auto;
     transform: translate(-50%, -50%);
     z-index: 5;
-    opacity: 0.6;
+    opacity: 0.72;
     pointer-events: none;
 }
 
@@ -135,7 +135,7 @@
     object-fit: contain;
     background: transparent;
     mix-blend-mode: multiply;
-    opacity: 0.6;
+    opacity: 0.72;
     filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.6)) saturate(1.15);
 }
 

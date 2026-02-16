@@ -1,5 +1,5 @@
 import Content from '../models/Content.js';
-import { uploadBuffer } from '../utils/gridfs.js';
+import { uploadImageWithVariants } from '../utils/imageVariants.js';
 
 const getOrCreateContent = async () => {
   let content = await Content.findOne();
@@ -31,15 +31,14 @@ export const updateHeroImages = async (req, res) => {
     return res.status(400).json({ message: 'No images uploaded' });
   }
 
-  const ids = await Promise.all(
-    req.files.map(file => uploadBuffer({
-      buffer: file.buffer,
-      filename: file.originalname,
-      contentType: file.mimetype
-    }))
+  const variants = await Promise.all(
+    req.files.map(async (file) => {
+      return uploadImageWithVariants(file.buffer, file.originalname);
+    })
   );
-  const images = ids.map(id => `/api/files/${id}`);
+  const images = variants.map(item => item.default);
   content.heroImages = images;
+  content.heroImageVariants = variants;
   await content.save();
 
   return res.json(content);
@@ -53,7 +52,25 @@ export const deleteHeroImage = async (req, res) => {
     return res.status(400).json({ message: 'Image path required' });
   }
 
-  content.heroImages = (content.heroImages || []).filter(img => img !== image);
+  const currentHeroImages = [...(content.heroImages || [])];
+  const currentHeroVariants = [...(content.heroImageVariants || [])];
+  const removeIndex = currentHeroImages.findIndex(img => img === image);
+
+  if (removeIndex >= 0) {
+    currentHeroImages.splice(removeIndex, 1);
+    currentHeroVariants.splice(removeIndex, 1);
+    content.heroImages = currentHeroImages;
+    content.heroImageVariants = currentHeroVariants;
+  } else {
+    const filteredVariants = currentHeroVariants.filter((variant) => (
+      variant?.default !== image &&
+      variant?.sm !== image &&
+      variant?.md !== image &&
+      variant?.lg !== image
+    ));
+    content.heroImageVariants = filteredVariants;
+    content.heroImages = filteredVariants.map(variant => variant.default).filter(Boolean);
+  }
   await content.save();
 
   return res.json(content);
@@ -67,12 +84,9 @@ export const updateArtistProfile = async (req, res) => {
   if (bio !== undefined) content.artistProfile.bio = bio;
 
   if (req.file) {
-    const id = await uploadBuffer({
-      buffer: req.file.buffer,
-      filename: req.file.originalname,
-      contentType: req.file.mimetype
-    });
-    content.artistProfile.image = `/api/files/${id}`;
+    const variants = await uploadImageWithVariants(req.file.buffer, req.file.originalname);
+    content.artistProfile.image = variants.default;
+    content.artistProfile.imageVariants = variants;
   }
 
   await content.save();

@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import './ArtworkCard.css';
 import watermarkLogo from '../assets/logo2.png';
-import { resolveImageUrl } from '../utils/api';
+import { getResponsiveImage, resolveImageUrl } from '../utils/api';
 
 const ArtworkCard = ({ artwork, onWhatsAppClick }) => {
     const images = useMemo(() => artwork.images || [artwork.image], [artwork.images, artwork.image]);
+    const variants = useMemo(() => artwork.imageVariants || [], [artwork.imageVariants]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const touchStartX = useRef(null);
     const touchStartY = useRef(null);
@@ -14,12 +15,14 @@ const ArtworkCard = ({ artwork, onWhatsAppClick }) => {
     }, [artwork._id]);
 
     useEffect(() => {
-        images.forEach((image) => {
+        const entries = variants.length > 0 ? variants : images;
+        entries.forEach((image) => {
             const preloaded = new Image();
             preloaded.decoding = 'async';
-            preloaded.src = resolveImageUrl(image);
+            const source = getResponsiveImage(image);
+            preloaded.src = source.src || resolveImageUrl(typeof image === 'string' ? image : '');
         });
-    }, [images]);
+    }, [images, variants]);
 
     const handleContextMenu = (e) => {
         e.preventDefault();
@@ -72,13 +75,21 @@ const ArtworkCard = ({ artwork, onWhatsAppClick }) => {
 
     return (
         <div className="artwork-card">
+            {(() => {
+                const source = getResponsiveImage(
+                    variants[currentIndex] || images[currentIndex],
+                    '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'
+                );
+                return (
             <div
                 className="artwork-image-container"
                 onTouchStart={handleTouchStart}
                 onTouchEnd={handleTouchEnd}
             >
                 <img
-                    src={resolveImageUrl(images[currentIndex])}
+                    src={source.src || resolveImageUrl(images[currentIndex])}
+                    srcSet={source.srcSet || undefined}
+                    sizes={source.sizes || undefined}
                     alt={artwork.title}
                     className="artwork-image"
                     loading="eager"
@@ -127,6 +138,8 @@ const ArtworkCard = ({ artwork, onWhatsAppClick }) => {
                     </button>
                 </div>
             </div>
+                );
+            })()}
             <div className="artwork-info">
                 <h3 className="artwork-title">{artwork.title}</h3>
                 <p className="artwork-description">{artwork.description}</p>

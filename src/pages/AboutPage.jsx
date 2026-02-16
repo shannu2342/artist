@@ -1,5 +1,5 @@
 import React from 'react';
-import { resolveImageUrl } from '../utils/api';
+import { getResponsiveImage, resolveImageUrl } from '../utils/api';
 import './AboutPage.css';
 
 const AboutPage = ({ content, artistProfile }) => {
@@ -19,14 +19,24 @@ const AboutPage = ({ content, artistProfile }) => {
                     <div className="about-grid">
                         <div className="about-image">
                             {artistProfile?.image ? (
-                                <img
-                                    className="artist-portrait-image"
-                                    src={resolveImageUrl(artistProfile.image)}
-                                    alt={artistProfile?.name || 'Artist'}
-                                    loading="eager"
-                                    decoding="async"
-                                    fetchPriority="high"
-                                />
+                                (() => {
+                                    const source = getResponsiveImage(
+                                        artistProfile?.imageVariants || artistProfile?.image,
+                                        '(max-width: 768px) 100vw, 520px'
+                                    );
+                                    return (
+                                        <img
+                                            className="artist-portrait-image"
+                                            src={source.src || resolveImageUrl(artistProfile.image)}
+                                            srcSet={source.srcSet || undefined}
+                                            sizes={source.sizes || undefined}
+                                            alt={artistProfile?.name || 'Artist'}
+                                            loading="eager"
+                                            decoding="async"
+                                            fetchPriority="high"
+                                        />
+                                    );
+                                })()
                             ) : (
                                 <div className="artist-portrait">
                                     <i className="fas fa-palette"></i>

@@ -4,7 +4,7 @@ import path from 'path';
 import mongoose from 'mongoose';
 import Artwork from './models/Artwork.js';
 import connectDB from './config/db.js';
-import { uploadBuffer } from './utils/gridfs.js';
+import { uploadImageWithVariants } from './utils/imageVariants.js';
 
 dotenv.config();
 
@@ -21,11 +21,24 @@ const migrate = async () => {
 
     for (const artwork of artworks) {
       const newImages = [];
+      const newImageVariants = [];
       let changed = false;
 
-      for (const imagePath of artwork.images || []) {
+      const existingVariants = artwork.imageVariants || [];
+      for (let index = 0; index < (artwork.images || []).length; index += 1) {
+        const imagePath = artwork.images[index];
         if (imagePath.startsWith('/api/files/')) {
           newImages.push(imagePath);
+          if (existingVariants[index]) {
+            newImageVariants.push(existingVariants[index]);
+          } else {
+            newImageVariants.push({
+              default: imagePath,
+              sm: '',
+              md: '',
+              lg: imagePath
+            });
+          }
           continue;
         }
 
@@ -39,17 +52,15 @@ const migrate = async () => {
         }
 
         const buffer = fs.readFileSync(diskPath);
-        const id = await uploadBuffer({
-          buffer,
-          filename: path.basename(diskPath),
-          contentType: 'image/jpeg'
-        });
-        newImages.push(`/api/files/${id}`);
+        const variants = await uploadImageWithVariants(buffer, path.basename(diskPath));
+        newImages.push(variants.default);
+        newImageVariants.push(variants);
         changed = true;
       }
 
-      if (changed) {
+      if (changed || (artwork.images || []).length !== (artwork.imageVariants || []).length) {
         artwork.images = newImages;
+        artwork.imageVariants = newImageVariants;
         await artwork.save();
         updatedCount += 1;
       }

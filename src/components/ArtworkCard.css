@@ -33,10 +33,13 @@
 
 .watermark-overlay {
     position: absolute;
-    bottom: 0.75rem;
-    right: 0.75rem;
-    width: 120px;
-    height: 70px;
+    top: 50%;
+    left: 50%;
+    right: auto;
+    bottom: auto;
+    transform: translate(-50%, -50%);
+    width: 140px;
+    height: 84px;
     background: transparent;
     border-radius: 0;
     display: flex;
@@ -44,8 +47,9 @@
     justify-content: center;
     color: var(--text-white);
     backdrop-filter: none;
-    z-index: 10;
-    opacity: 0.6;
+    z-index: 18;
+    opacity: 0.72;
+    pointer-events: none;
 }
 
 .watermark-logo {
@@ -107,10 +111,8 @@
 
 @media (max-width: 768px) {
     .watermark-overlay {
-        bottom: 0.5rem;
-        right: 0.5rem;
-        width: 56px;
-        height: 56px;
+        width: 96px;
+        height: 58px;
     }
 
     .artwork-image-nav {
@@ -121,8 +123,8 @@
 
 @media (max-width: 480px) {
     .watermark-overlay {
-        width: 48px;
-        height: 48px;
+        width: 84px;
+        height: 50px;
     }
 }
 

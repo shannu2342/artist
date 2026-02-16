@@ -30,6 +30,7 @@ const Modal = ({ isOpen, onClose, artwork, onWhatsAppClick }) => {
     if (!isOpen || !artwork) return null;
 
     const images = artwork.images || [artwork.image];
+    const imageVariants = artwork.imageVariants || [];
 
     return (
         <div className="modal-overlay" onClick={handleOverlayClick}>
@@ -40,7 +41,7 @@ const Modal = ({ isOpen, onClose, artwork, onWhatsAppClick }) => {
 
                 <div className="modal-body">
                     <div className="modal-image-container">
-                        <ImageSlideshow images={images} alt={artwork.title} />
+                        <ImageSlideshow images={images} imageVariants={imageVariants} alt={artwork.title} />
                     </div>
 
                     <div className="modal-info">

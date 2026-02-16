@@ -16,12 +16,19 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 5000;
 
-const allowedOrigins = [
+const defaultAllowedOrigins = [
   'http://localhost:3000',
   'http://localhost:5173',
   'http://localhost:4173',
   'https://artist-portfoilo-vul9.vercel.app'
 ];
+
+const envAllowedOrigins = (process.env.FRONTEND_URLS || process.env.FRONTEND_URL || '')
+  .split(',')
+  .map(origin => origin.trim())
+  .filter(Boolean);
+
+const allowedOrigins = [...new Set([...defaultAllowedOrigins, ...envAllowedOrigins])];
 
 app.use(cors({
   origin: (origin, callback) => {

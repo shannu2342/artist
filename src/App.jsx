@@ -30,6 +30,7 @@ const App = () => {
     const [aboutContent, setAboutContent] = useState('');
     const [termsContent, setTermsContent] = useState('');
     const [heroImages, setHeroImages] = useState([]);
+    const [heroImageVariants, setHeroImageVariants] = useState([]);
     const [artistProfile, setArtistProfile] = useState({ name: 'Aurexon', bio: '', image: '' });
     const [adminLoggedIn, setAdminLoggedIn] = useState(false);
 
@@ -67,6 +68,7 @@ const App = () => {
                     setTermsContent(content.terms || '');
                     setWhatsAppNumber(content.whatsapp || '919876543210');
                     setHeroImages(Array.isArray(content.heroImages) ? content.heroImages : []);
+                    setHeroImageVariants(Array.isArray(content.heroImageVariants) ? content.heroImageVariants : []);
                     setArtistProfile(content.artistProfile || { name: 'Aurexon', bio: '', image: '' });
                 }
             } catch (error) {
@@ -84,15 +86,19 @@ const App = () => {
     }, []);
 
     useEffect(() => {
-        const artworkCovers = gallery.map((art) => (art.images && art.images[0] ? art.images[0] : art.image));
+        const artworkCovers = gallery.map((art) => (
+            art.imageVariants && art.imageVariants[0]
+                ? art.imageVariants[0]
+                : (art.images && art.images[0] ? art.images[0] : art.image)
+        ));
         const importantImages = [
-            ...heroImages,
-            artistProfile?.image,
+            ...(heroImageVariants.length > 0 ? heroImageVariants : heroImages),
+            artistProfile?.imageVariants || artistProfile?.image,
             ...artworkCovers
         ];
 
         preloadImageUrls(importantImages, 30);
-    }, [gallery, heroImages, artistProfile?.image]);
+    }, [gallery, heroImages, heroImageVariants, artistProfile?.image, artistProfile?.imageVariants]);
 
     const addArtwork = async (artwork) => {
         try {
@@ -249,6 +255,7 @@ const App = () => {
             if (response.ok) {
                 const updated = await response.json();
                 setHeroImages(Array.isArray(updated.heroImages) ? updated.heroImages : []);
+                setHeroImageVariants(Array.isArray(updated.heroImageVariants) ? updated.heroImageVariants : []);
             }
         } catch (error) {
             console.error('Error updating hero images:', error);
@@ -269,6 +276,7 @@ const App = () => {
             if (response.ok) {
                 const updated = await response.json();
                 setHeroImages(Array.isArray(updated.heroImages) ? updated.heroImages : []);
+                setHeroImageVariants(Array.isArray(updated.heroImageVariants) ? updated.heroImageVariants : []);
             }
         } catch (error) {
             console.error('Error deleting hero image:', error);
@@ -320,6 +328,7 @@ const App = () => {
                             gallery={gallery}
                             whatsAppNumber={whatsAppNumber}
                             heroImages={heroImages}
+                            heroImageVariants={heroImageVariants}
                             artistProfile={artistProfile}
                         />
                     } />

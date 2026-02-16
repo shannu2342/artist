@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './EditArtistProfile.css';
-import { resolveImageUrl } from '../utils/api';
+import { getResponsiveImage, resolveImageUrl } from '../utils/api';
 
 const EditArtistProfile = ({ artistProfile, onUpdateArtistProfile }) => {
     const navigate = useNavigate();
@@ -75,12 +75,22 @@ const EditArtistProfile = ({ artistProfile, onUpdateArtistProfile }) => {
                         <h2>Current Profile</h2>
                         <div className="profile-card">
                             {artistProfile?.image ? (
-                                <img
-                                    src={resolveImageUrl(artistProfile.image)}
-                                    alt={artistProfile?.name || 'Artist'}
-                                    loading="eager"
-                                    decoding="async"
-                                />
+                                (() => {
+                                    const source = getResponsiveImage(
+                                        artistProfile?.imageVariants || artistProfile?.image,
+                                        '(max-width: 768px) 100vw, 420px'
+                                    );
+                                    return (
+                                        <img
+                                            src={source.src || resolveImageUrl(artistProfile.image)}
+                                            srcSet={source.srcSet || undefined}
+                                            sizes={source.sizes || undefined}
+                                            alt={artistProfile?.name || 'Artist'}
+                                            loading="eager"
+                                            decoding="async"
+                                        />
+                                    );
+                                })()
                             ) : (
                                 <div className="profile-placeholder">
                                     <i className="fas fa-palette"></i>

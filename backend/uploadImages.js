@@ -4,7 +4,7 @@ import path from 'path';
 import mongoose from 'mongoose';
 import Artwork from './models/Artwork.js';
 import connectDB from './config/db.js';
-import { uploadBuffer } from './utils/gridfs.js';
+import { uploadImageWithVariants } from './utils/imageVariants.js';
 
 dotenv.config();
 
@@ -55,16 +55,13 @@ const uploadImages = async () => {
 
             // Create artwork object
             const buffer = fs.readFileSync(path.join(imagesFolder, fileName));
-            const fileId = await uploadBuffer({
-                buffer,
-                filename: fileName,
-                contentType: 'image/jpeg'
-            });
+            const variants = await uploadImageWithVariants(buffer, fileName);
 
             const artwork = {
                 title: title || `Untitled Artwork ${i + 1}`,
                 description: 'Beautiful artwork created by Aurexon',
-                images: [`/api/files/${fileId}`],
+                images: [variants.default],
+                imageVariants: [variants],
                 category: 'digital',
                 price: ''
             };
