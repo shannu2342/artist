@@ -1,0 +1,12 @@
+node_modules/
+backend/node_modules/
+.env
+backend/.env
+.DS_Store
+*.log
+dist/
+build/
+backend/public/
+images/
+screenshot.png
+backend/package-lock.json  
