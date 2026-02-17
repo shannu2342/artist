@@ -103,7 +103,7 @@
     width: 150px;
     height: 92px;
     background: transparent;
-    mix-blend-mode: normal;
+    mix-blend-mode: multiply;
     opacity: 0.78;
     filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.45));
 }
