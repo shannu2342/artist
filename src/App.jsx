@@ -22,45 +22,6 @@ import EditHero from './pages/EditHero';
 import EditArtistProfile from './pages/EditArtistProfile';
 import { apiUrl } from './utils/api';
 import { preloadImageUrls } from './utils/imagePerformance';
-import mockImage1 from './assets/image1.jpeg';
-import mockImage2 from './assets/image2.jpeg';
-import mockImage3 from './assets/image3.jpeg';
-
-const MOCK_GALLERY = [
-    {
-        _id: 'mock-1',
-        title: 'Mock Sunset Composition',
-        description: 'Demo artwork for testing gallery, modal, and slideshow behavior.',
-        images: [mockImage1, mockImage2],
-        imageVariants: [],
-        category: 'mock',
-        price: '',
-        featured: true,
-        order: 1
-    },
-    {
-        _id: 'mock-2',
-        title: 'Mock Color Study',
-        description: 'Second mock piece with multiple images for next/prev testing.',
-        images: [mockImage2, mockImage3],
-        imageVariants: [],
-        category: 'mock',
-        price: '',
-        featured: true,
-        order: 2
-    },
-    {
-        _id: 'mock-3',
-        title: 'Mock Light Portrait',
-        description: 'Single-image mock item to validate normal card rendering.',
-        images: [mockImage3],
-        imageVariants: [],
-        category: 'mock',
-        price: '',
-        featured: false,
-        order: 3
-    }
-];
 
 const App = () => {
     const [whatsAppNumber, setWhatsAppNumber] = useState('919876543210');
@@ -79,11 +40,10 @@ const App = () => {
                 const response = await fetch(apiUrl('/api/artworks'));
                 if (response.ok) {
                     const artworks = await response.json();
-                    setGallery(Array.isArray(artworks) && artworks.length > 0 ? artworks : MOCK_GALLERY);
+                    setGallery(Array.isArray(artworks) ? artworks : []);
                 }
             } catch (error) {
                 console.error('Error fetching artworks:', error);
-                setGallery(MOCK_GALLERY);
             }
         };
 
