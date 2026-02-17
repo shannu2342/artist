@@ -173,7 +173,14 @@
 
 .artwork-action-btn i {
     font-size: 1.1rem;
+}
+
+.artwork-action-btn-whatsapp i {
     color: #25d366;
+}
+
+.artwork-action-btn-view i {
+    color: var(--primary-color);
 }
 
 .artwork-action-btn span {

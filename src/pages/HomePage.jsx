@@ -1,6 +1,7 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import ArtworkCard from '../components/ArtworkCard';
+import Modal from '../components/Modal';
 import './HomePage.css';
 import heroImage1 from '../assets/image1.jpeg';
 import heroImage2 from '../assets/image2.jpeg';
@@ -8,6 +9,7 @@ import heroImage3 from '../assets/image3.jpeg';
 import { getResponsiveImage, resolveImageUrl } from '../utils/api';
 
 const HomePage = ({ gallery, whatsAppNumber, heroImages = [], heroImageVariants = [], artistProfile }) => {
+    const [selectedArtwork, setSelectedArtwork] = useState(null);
     const featuredList = gallery.filter((artwork) => artwork.featured);
     const featuredArtworks = (featuredList.length > 0 ? featuredList : gallery).slice(0, 6);
     const heroTrackRef = useRef(null);
@@ -35,6 +37,14 @@ const HomePage = ({ gallery, whatsAppNumber, heroImages = [], heroImageVariants 
     const handleWhatsAppClick = (artwork) => {
         const message = encodeURIComponent(`Hello, I'm interested in the painting titled "${artwork.title}". Please share the price and details.`);
         window.open(`https://wa.me/${whatsAppNumber}?text=${message}`, '_blank');
+    };
+
+    const handleViewClick = (artwork) => {
+        setSelectedArtwork(artwork);
+    };
+
+    const handleCloseModal = () => {
+        setSelectedArtwork(null);
     };
 
     return (
@@ -131,6 +141,7 @@ const HomePage = ({ gallery, whatsAppNumber, heroImages = [], heroImageVariants 
                                 key={artwork._id}
                                 artwork={artwork}
                                 onWhatsAppClick={handleWhatsAppClick}
+                                onViewClick={handleViewClick}
                             />
                         ))}
                     </div>
@@ -231,6 +242,13 @@ const HomePage = ({ gallery, whatsAppNumber, heroImages = [], heroImageVariants 
                     </div>
                 </div>
             </section>
+
+            <Modal
+                isOpen={!!selectedArtwork}
+                onClose={handleCloseModal}
+                artwork={selectedArtwork}
+                onWhatsAppClick={handleWhatsAppClick}
+            />
 
         </div>
     );

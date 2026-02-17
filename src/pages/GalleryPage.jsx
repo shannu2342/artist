@@ -1,11 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ArtworkCard from '../components/ArtworkCard';
+import Modal from '../components/Modal';
 import './GalleryPage.css';
 
 const GalleryPage = ({ gallery, whatsAppNumber }) => {
+    const [selectedArtwork, setSelectedArtwork] = useState(null);
+
     const handleWhatsAppClick = (artwork) => {
         const message = encodeURIComponent(`Hello, I'm interested in the painting titled "${artwork.title}". Please share the price and details.`);
         window.open(`https://wa.me/${whatsAppNumber}?text=${message}`, '_blank');
+    };
+
+    const handleViewClick = (artwork) => {
+        setSelectedArtwork(artwork);
+    };
+
+    const handleCloseModal = () => {
+        setSelectedArtwork(null);
     };
 
     return (
@@ -27,6 +38,7 @@ const GalleryPage = ({ gallery, whatsAppNumber }) => {
                                 key={artwork._id}
                                 artwork={artwork}
                                 onWhatsAppClick={handleWhatsAppClick}
+                                onViewClick={handleViewClick}
                             />
                         ))}
                     </div>
@@ -40,6 +52,13 @@ const GalleryPage = ({ gallery, whatsAppNumber }) => {
                     )}
                 </div>
             </section>
+
+            <Modal
+                isOpen={!!selectedArtwork}
+                onClose={handleCloseModal}
+                artwork={selectedArtwork}
+                onWhatsAppClick={handleWhatsAppClick}
+            />
 
         </div>
     );

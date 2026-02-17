@@ -3,7 +3,7 @@ import './ArtworkCard.css';
 import watermarkLogo from '../assets/logo2.png';
 import { getResponsiveImage, resolveImageUrl } from '../utils/api';
 
-const ArtworkCard = ({ artwork, onWhatsAppClick }) => {
+const ArtworkCard = ({ artwork, onWhatsAppClick, onViewClick }) => {
     const images = useMemo(() => artwork.images || [artwork.image], [artwork.images, artwork.image]);
     const variants = useMemo(() => artwork.imageVariants || [], [artwork.imageVariants]);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -130,11 +130,18 @@ const ArtworkCard = ({ artwork, onWhatsAppClick }) => {
                 </div>
                 <div className="artwork-overlay">
                     <button
-                        className="artwork-action-btn"
+                        className="artwork-action-btn artwork-action-btn-whatsapp"
                         onClick={() => onWhatsAppClick(artwork)}
                     >
                         <i className="fab fa-whatsapp"></i>
                         <span>Interested</span>
+                    </button>
+                    <button
+                        className="artwork-action-btn artwork-action-btn-view"
+                        onClick={() => onViewClick(artwork)}
+                    >
+                        <i className="fas fa-eye"></i>
+                        <span>View</span>
                     </button>
                 </div>
             </div>
