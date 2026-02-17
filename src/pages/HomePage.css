@@ -266,8 +266,8 @@
 
 .artwork-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 2rem;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 2.4rem;
     margin-bottom: 3rem;
 }
 
@@ -444,8 +444,8 @@
     }
 
     .artwork-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 1.5rem;
+        grid-template-columns: 1fr;
+        gap: 1.75rem;
     }
 
     .about-content {

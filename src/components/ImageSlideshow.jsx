@@ -1,21 +1,37 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import './ImageSlideshow.css';
 import watermarkLogo from '../assets/logo2.png';
 import { getResponsiveImage, resolveImageUrl } from '../utils/api';
 
-const ImageSlideshow = ({ images, imageVariants = [], alt }) => {
-    const [currentIndex, setCurrentIndex] = useState(0);
+const ImageSlideshow = ({ images, imageVariants = [], alt, currentIndex, onIndexChange }) => {
+    const [internalCurrentIndex, setInternalCurrentIndex] = useState(0);
+    const activeIndex = typeof currentIndex === 'number' ? currentIndex : internalCurrentIndex;
+
+    useEffect(() => {
+        setInternalCurrentIndex(0);
+    }, [images]);
+
+    const setIndex = (nextIndex) => {
+        if (typeof currentIndex !== 'number') {
+            setInternalCurrentIndex(nextIndex);
+        }
+        if (onIndexChange) {
+            onIndexChange(nextIndex);
+        }
+    };
 
     const handlePrev = () => {
-        setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+        const nextIndex = activeIndex === 0 ? images.length - 1 : activeIndex - 1;
+        setIndex(nextIndex);
     };
 
     const handleNext = () => {
-        setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+        const nextIndex = activeIndex === images.length - 1 ? 0 : activeIndex + 1;
+        setIndex(nextIndex);
     };
 
     const handleDotClick = (index) => {
-        setCurrentIndex(index);
+        setIndex(index);
     };
 
     const handleContextMenu = (e) => {
@@ -38,7 +54,7 @@ const ImageSlideshow = ({ images, imageVariants = [], alt }) => {
                 {images.map((image, index) => (
                     <div
                         key={index}
-                        className={`slide ${index === currentIndex ? 'active' : ''}`}
+                        className={`slide ${index === activeIndex ? 'active' : ''}`}
                     >
                         {(() => {
                             const source = getResponsiveImage(
@@ -51,9 +67,9 @@ const ImageSlideshow = ({ images, imageVariants = [], alt }) => {
                             srcSet={source.srcSet || undefined}
                             sizes={source.sizes || undefined}
                             alt={`${alt} - Image ${index + 1}`}
-                            loading={index === currentIndex ? 'eager' : 'lazy'}
+                            loading={index === activeIndex ? 'eager' : 'lazy'}
                             decoding="async"
-                            fetchPriority={index === currentIndex ? 'high' : 'auto'}
+                            fetchPriority={index === activeIndex ? 'high' : 'auto'}
                             onContextMenu={handleContextMenu}
                             onDragStart={handleDragStart}
                             draggable={false}
@@ -79,7 +95,7 @@ const ImageSlideshow = ({ images, imageVariants = [], alt }) => {
                             {images.map((_, index) => (
                                 <button
                                     key={index}
-                                    className={`dot ${index === currentIndex ? 'active' : ''}`}
+                                    className={`dot ${index === activeIndex ? 'active' : ''}`}
                                     onClick={() => handleDotClick(index)}
                                     aria-label={`Go to slide ${index + 1}`}
                                 ></button>
@@ -87,7 +103,7 @@ const ImageSlideshow = ({ images, imageVariants = [], alt }) => {
                         </div>
 
                         <div className="slideshow-counter">
-                            <span>{currentIndex + 1}</span> / <span>{images.length}</span>
+                            <span>{activeIndex + 1}</span> / <span>{images.length}</span>
                         </div>
                     </>
                 )}

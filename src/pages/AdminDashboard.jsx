@@ -1,16 +1,63 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './AdminDashboard.css';
+import { apiUrl } from '../utils/api';
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [newEmail, setNewEmail] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [credMessage, setCredMessage] = useState('');
+    const [credError, setCredError] = useState('');
+    const [updatingCreds, setUpdatingCreds] = useState(false);
 
     const handleLogout = () => {
         localStorage.removeItem('adminLoggedIn');
         localStorage.removeItem('adminToken');
         localStorage.removeItem('isAdminLoggedIn');
         navigate('/admin/login');
+    };
+
+    const handleCredentialsUpdate = async (e) => {
+        e.preventDefault();
+        setCredMessage('');
+        setCredError('');
+        setUpdatingCreds(true);
+
+        try {
+            const response = await fetch(apiUrl('/api/auth/credentials'), {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                },
+                body: JSON.stringify({
+                    currentPassword,
+                    newEmail,
+                    newPassword
+                })
+            });
+
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(data.message || 'Failed to update credentials');
+            }
+
+            if (data.token) {
+                localStorage.setItem('adminToken', data.token);
+            }
+
+            setCredMessage('Admin login updated successfully. Use new credentials next time.');
+            setCurrentPassword('');
+            setNewEmail('');
+            setNewPassword('');
+        } catch (error) {
+            setCredError(error.message || 'Failed to update credentials');
+        } finally {
+            setUpdatingCreds(false);
+        }
     };
 
     return (
@@ -137,6 +184,53 @@ const AdminDashboard = () => {
                             </button>
                         </div>
                     </div>
+
+                    <section className="security-card">
+                        <div className="security-header">
+                            <h3>Reset Admin Login</h3>
+                            <p>Update admin email and password used for future login.</p>
+                        </div>
+                        {credMessage && <div className="security-success">{credMessage}</div>}
+                        {credError && <div className="security-error">{credError}</div>}
+                        <form className="security-form" onSubmit={handleCredentialsUpdate}>
+                            <div className="security-field">
+                                <label htmlFor="currentPassword">Current Password</label>
+                                <input
+                                    id="currentPassword"
+                                    type="password"
+                                    value={currentPassword}
+                                    onChange={(e) => setCurrentPassword(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <div className="security-field">
+                                <label htmlFor="newEmail">New Admin Email</label>
+                                <input
+                                    id="newEmail"
+                                    type="email"
+                                    value={newEmail}
+                                    onChange={(e) => setNewEmail(e.target.value)}
+                                    placeholder="Artist@login.com"
+                                    required
+                                />
+                            </div>
+                            <div className="security-field">
+                                <label htmlFor="newPassword">New Admin Password</label>
+                                <input
+                                    id="newPassword"
+                                    type="password"
+                                    value={newPassword}
+                                    onChange={(e) => setNewPassword(e.target.value)}
+                                    placeholder="At least 8 characters"
+                                    minLength={8}
+                                    required
+                                />
+                            </div>
+                            <button type="submit" className="security-save-btn" disabled={updatingCreds}>
+                                {updatingCreds ? 'Updating...' : 'Save New Login'}
+                            </button>
+                        </form>
+                    </section>
                 </main>
             </div>
         </div>

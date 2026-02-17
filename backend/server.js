@@ -69,15 +69,13 @@ const start = async () => {
     const email = process.env.ADMIN_EMAIL;
     const password = process.env.ADMIN_PASSWORD;
     if (email && password) {
-      const normalizedEmail = email.toLowerCase().trim();
-      const passwordHash = await bcrypt.hash(password, 10);
-      await Admin.deleteMany({ email: { $ne: normalizedEmail } });
-      await Admin.findOneAndUpdate(
-        { email: normalizedEmail },
-        { email: normalizedEmail, passwordHash },
-        { upsert: true, new: true }
-      );
-      console.log(`Admin user synced from env: ${normalizedEmail}`);
+      const existingAdmin = await Admin.findOne();
+      if (!existingAdmin) {
+        const normalizedEmail = email.toLowerCase().trim();
+        const passwordHash = await bcrypt.hash(password, 10);
+        await Admin.create({ email: normalizedEmail, passwordHash });
+        console.log(`Admin user created from env: ${normalizedEmail}`);
+      }
     }
     app.listen(port, () => {
       console.log(`API running on port ${port}`);
