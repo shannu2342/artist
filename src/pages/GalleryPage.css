@@ -72,8 +72,8 @@
 
 .gallery-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(390px, 1fr));
-    gap: 2.6rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.8rem;
 }
 
 .empty-gallery {
@@ -117,8 +117,8 @@
     }
 
     .gallery-grid {
-        grid-template-columns: 1fr;
-        gap: 1.75rem;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1.3rem;
     }
 
     .empty-gallery {
@@ -136,8 +136,8 @@
 
 @media (max-width: 480px) {
     .gallery-grid {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1.2rem;
     }
 
     .filter-tabs {
