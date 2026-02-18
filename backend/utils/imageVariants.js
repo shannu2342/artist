@@ -12,7 +12,10 @@ const IMAGE_EFFORT = Number(process.env.AVIF_EFFORT || 5);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const uploadsBaseDir = path.join(__dirname, '..', 'public', 'uploads');
+const defaultUploadsBaseDir = path.join(__dirname, '..', 'public', 'uploads');
+const uploadsBaseDir = process.env.UPLOADS_DIR
+  ? path.resolve(process.env.UPLOADS_DIR)
+  : defaultUploadsBaseDir;
 const smallDir = path.join(uploadsBaseDir, 'small');
 const mediumDir = path.join(uploadsBaseDir, 'medium');
 const fullDir = path.join(uploadsBaseDir, 'full');
@@ -89,7 +92,8 @@ export const deleteImageVariants = async (variants = {}) => {
 
   for (const relativePath of uniquePaths) {
     if (!relativePath.startsWith('/uploads/')) continue;
-    const filePath = path.join(__dirname, '..', 'public', relativePath.replace(/^\/+/, ''));
+    const suffix = relativePath.replace(/^\/uploads\/?/, '');
+    const filePath = path.join(uploadsBaseDir, suffix);
     if (fs.existsSync(filePath)) {
       try {
         fs.unlinkSync(filePath);

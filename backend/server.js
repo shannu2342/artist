@@ -85,7 +85,10 @@ app.use(morgan('dev'));
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const publicDir = path.join(__dirname, 'public');
-const uploadsDir = path.join(publicDir, 'uploads');
+const uploadsDir = process.env.UPLOADS_DIR
+  ? path.resolve(process.env.UPLOADS_DIR)
+  : path.join(publicDir, 'uploads');
+const legacyUploadsDir = path.join(process.cwd(), 'public', 'uploads');
 
 // Serve static files from public folder
 app.use(express.static(publicDir));
@@ -93,9 +96,19 @@ app.use('/uploads', express.static(uploadsDir, {
   maxAge: '365d',
   immutable: true
 }));
+if (legacyUploadsDir !== uploadsDir) {
+  app.use('/uploads', express.static(legacyUploadsDir, {
+    maxAge: '365d',
+    immutable: true
+  }));
+}
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
+});
+
+app.get('/', (req, res) => {
+  res.status(200).send('Artist portfolio API is running');
 });
 
 app.use('/api/auth', authRoutes);
