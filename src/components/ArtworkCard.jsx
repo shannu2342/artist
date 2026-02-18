@@ -115,7 +115,7 @@ const ArtworkCard = ({ artwork, onWhatsAppClick, onViewClick, priority = false }
                     { includeFull: false }
                 );
                 const smallPreview = resolveImageUrl(
-                    activeVariant?.small || activeVariant?.sm || activeVariant?.medium || activeVariant?.md || source.src || images[currentIndex]
+                    activeVariant?.medium || activeVariant?.md || activeVariant?.small || activeVariant?.sm || source.src || images[currentIndex]
                 );
                 return (
             <div

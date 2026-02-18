@@ -69,7 +69,7 @@ const ImageSlideshow = ({ images, imageVariants = [], alt, currentIndex, onIndex
                                 }
                                 : image;
                             const preview = resolveImageUrl(
-                                variant?.small || variant?.sm || variant?.medium || variant?.md || image
+                                variant?.medium || variant?.md || variant?.small || variant?.sm || image
                             );
                             const source = getResponsiveImage(
                                 variantForQuality,
