@@ -3,16 +3,51 @@ import './ArtworkCard.css';
 import watermarkLogo from '../assets/logo2.png';
 import { getResponsiveImage, resolveImageUrl } from '../utils/api';
 
-const ArtworkCard = ({ artwork, onWhatsAppClick, onViewClick }) => {
+const ArtworkCard = ({ artwork, onWhatsAppClick, onViewClick, priority = false }) => {
     const images = useMemo(() => artwork.images || [artwork.image], [artwork.images, artwork.image]);
     const variants = useMemo(() => artwork.imageVariants || [], [artwork.imageVariants]);
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [shouldLoadMedium, setShouldLoadMedium] = useState(priority);
+    const [mainImageLoaded, setMainImageLoaded] = useState(false);
+    const imageContainerRef = useRef(null);
     const touchStartX = useRef(null);
     const touchStartY = useRef(null);
 
     useEffect(() => {
         setCurrentIndex(0);
     }, [artwork._id]);
+
+    useEffect(() => {
+        setMainImageLoaded(false);
+    }, [currentIndex, artwork._id]);
+
+    useEffect(() => {
+        if (shouldLoadMedium) {
+            setMainImageLoaded(false);
+        }
+    }, [shouldLoadMedium]);
+
+    useEffect(() => {
+        if (priority) {
+            setShouldLoadMedium(true);
+            return;
+        }
+        const element = imageContainerRef.current;
+        if (!element) return;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries.some((entry) => entry.isIntersecting || entry.intersectionRatio > 0)) {
+                    setShouldLoadMedium(true);
+                    observer.disconnect();
+                }
+            },
+            { rootMargin: '320px 0px' }
+        );
+
+        observer.observe(element);
+        return () => observer.disconnect();
+    }, [priority, artwork._id]);
 
     const handleContextMenu = (e) => {
         e.preventDefault();
@@ -66,27 +101,55 @@ const ArtworkCard = ({ artwork, onWhatsAppClick, onViewClick }) => {
     return (
         <div className="artwork-card">
             {(() => {
+                const activeVariant = variants[currentIndex];
                 const source = getResponsiveImage(
-                    variants[currentIndex] || images[currentIndex],
-                    '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'
+                    activeVariant
+                        ? {
+                            ...activeVariant,
+                            default: activeVariant.medium || activeVariant.md || activeVariant.default || '',
+                            full: '',
+                            lg: ''
+                        }
+                        : images[currentIndex],
+                    '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw',
+                    { includeFull: false }
+                );
+                const smallPreview = resolveImageUrl(
+                    activeVariant?.small || activeVariant?.sm || activeVariant?.medium || activeVariant?.md || source.src || images[currentIndex]
                 );
                 return (
             <div
+                ref={imageContainerRef}
                 className="artwork-image-container"
                 onTouchStart={handleTouchStart}
                 onTouchEnd={handleTouchEnd}
             >
+                {!mainImageLoaded && (
+                    <img
+                        src={smallPreview}
+                        alt=""
+                        aria-hidden="true"
+                        className="artwork-image-preview"
+                        loading="eager"
+                        decoding="async"
+                        width="1200"
+                        height="900"
+                    />
+                )}
                 <img
-                    src={source.src || resolveImageUrl(images[currentIndex])}
-                    srcSet={source.srcSet || undefined}
+                    src={shouldLoadMedium ? (source.src || resolveImageUrl(images[currentIndex])) : smallPreview}
+                    srcSet={shouldLoadMedium ? (source.srcSet || undefined) : undefined}
                     sizes={source.sizes || undefined}
                     alt={artwork.title}
-                    className="artwork-image"
-                    loading="lazy"
+                    className={`artwork-image ${mainImageLoaded ? 'is-loaded' : 'is-loading'}`}
+                    loading={priority ? 'eager' : 'lazy'}
                     decoding="async"
-                    fetchPriority="auto"
+                    fetchPriority={priority ? 'high' : 'auto'}
+                    width="1200"
+                    height="900"
                     onContextMenu={handleContextMenu}
                     onDragStart={handleDragStart}
+                    onLoad={() => setMainImageLoaded(true)}
                     draggable={false}
                 />
                 {images.length > 1 && (

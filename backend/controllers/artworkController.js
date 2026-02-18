@@ -2,6 +2,31 @@ import Artwork from '../models/Artwork.js';
 import fs from 'fs';
 import { deleteImageVariants, uploadImageWithVariants } from '../utils/imageVariants.js';
 
+const normalizeVariant = (variant = {}) => ({
+  ...variant,
+  default: variant.medium || variant.md || variant.default || '',
+  small: variant.small || variant.sm || '',
+  medium: variant.medium || variant.md || variant.default || '',
+  full: variant.full || variant.lg || variant.default || '',
+  sm: variant.small || variant.sm || '',
+  md: variant.medium || variant.md || variant.default || '',
+  lg: variant.full || variant.lg || variant.default || ''
+});
+
+const sanitizeArtworkForResponse = (artworkDoc) => {
+  const artwork = typeof artworkDoc.toObject === 'function' ? artworkDoc.toObject() : { ...artworkDoc };
+  const variants = (artwork.imageVariants || []).map(normalizeVariant);
+  const images = variants.length > 0
+    ? variants.map(v => v.medium || v.default).filter(Boolean)
+    : (artwork.images || []).filter((img) => typeof img === 'string' && img.startsWith('/uploads/'));
+
+  return {
+    ...artwork,
+    images,
+    imageVariants: variants
+  };
+};
+
 export const listArtworks = async (req, res) => {
   const page = Number(req.query.page || 1);
   const limit = Math.min(Number(req.query.limit || 0), 50);
@@ -13,7 +38,7 @@ export const listArtworks = async (req, res) => {
       Artwork.countDocuments()
     ]);
     return res.json({
-      items,
+      items: items.map(sanitizeArtworkForResponse),
       page,
       limit,
       total,
@@ -22,7 +47,7 @@ export const listArtworks = async (req, res) => {
   }
 
   const artworks = await Artwork.find().sort({ order: 1, createdAt: -1 });
-  return res.json(artworks);
+  return res.json(artworks.map(sanitizeArtworkForResponse));
 };
 
 export const createArtwork = async (req, res) => {
@@ -59,7 +84,7 @@ export const createArtwork = async (req, res) => {
       featured: featured === true || featured === 'true',
       order: order ? Number(order) : Date.now()
     });
-    return res.status(201).json(artwork);
+    return res.status(201).json(sanitizeArtworkForResponse(artwork));
   } catch (error) {
     console.error('Error creating artwork:', error);
     return res.status(500).json({ message: 'Server error' });
@@ -105,7 +130,7 @@ export const updateArtwork = async (req, res) => {
     }
 
     await artwork.save();
-    return res.json(artwork);
+    return res.json(sanitizeArtworkForResponse(artwork));
   } catch (error) {
     console.error('Error updating artwork:', error);
     return res.status(500).json({ message: 'Server error' });

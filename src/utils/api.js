@@ -11,13 +11,18 @@ export const resolveImageUrl = (url = '') => {
   if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')) {
     return url;
   }
+  if (url.startsWith('/assets/')) {
+    return url;
+  }
   return apiUrl(encodeURI(url));
 };
 
-export const getResponsiveImage = (imageOrVariants, sizes = '100vw') => {
+export const getResponsiveImage = (imageOrVariants, sizes = '100vw', options = {}) => {
   if (!imageOrVariants) {
     return { src: '', srcSet: '', sizes: '' };
   }
+
+  const { includeFull = true } = options;
 
   if (typeof imageOrVariants === 'string') {
     return {
@@ -29,7 +34,9 @@ export const getResponsiveImage = (imageOrVariants, sizes = '100vw') => {
 
   const sm = resolveImageUrl(imageOrVariants.small || imageOrVariants.sm || '');
   const md = resolveImageUrl(imageOrVariants.medium || imageOrVariants.md || '');
-  const lg = resolveImageUrl(imageOrVariants.full || imageOrVariants.lg || imageOrVariants.default || '');
+  const lg = includeFull
+    ? resolveImageUrl(imageOrVariants.full || imageOrVariants.lg || imageOrVariants.default || '')
+    : '';
   const src = resolveImageUrl(
     imageOrVariants.medium ||
     imageOrVariants.default ||

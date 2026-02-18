@@ -5,10 +5,12 @@ import { getResponsiveImage, resolveImageUrl } from '../utils/api';
 
 const ImageSlideshow = ({ images, imageVariants = [], alt, currentIndex, onIndexChange, quality = 'medium' }) => {
     const [internalCurrentIndex, setInternalCurrentIndex] = useState(0);
+    const [loadedMap, setLoadedMap] = useState({});
     const activeIndex = typeof currentIndex === 'number' ? currentIndex : internalCurrentIndex;
 
     useEffect(() => {
         setInternalCurrentIndex(0);
+        setLoadedMap({});
     }, [images]);
 
     const setIndex = (nextIndex) => {
@@ -66,8 +68,28 @@ const ImageSlideshow = ({ images, imageVariants = [], alt, currentIndex, onIndex
                                         : (variant.medium || variant.md || variant.default || variant.full)
                                 }
                                 : image;
-                            const source = getResponsiveImage(variantForQuality, '(max-width: 768px) 100vw, 80vw');
+                            const preview = resolveImageUrl(
+                                variant?.small || variant?.sm || variant?.medium || variant?.md || image
+                            );
+                            const source = getResponsiveImage(
+                                variantForQuality,
+                                '(max-width: 768px) 100vw, 80vw',
+                                { includeFull: quality === 'full' }
+                            );
                             return (
+                        <>
+                        {!loadedMap[index] && (
+                            <img
+                                src={preview}
+                                alt=""
+                                aria-hidden="true"
+                                className="slide-preview"
+                                loading="eager"
+                                decoding="async"
+                                width="1600"
+                                height="1200"
+                            />
+                        )}
                         <img
                             src={source.src || resolveImageUrl(image)}
                             srcSet={source.srcSet || undefined}
@@ -76,10 +98,15 @@ const ImageSlideshow = ({ images, imageVariants = [], alt, currentIndex, onIndex
                             loading={index === activeIndex ? 'eager' : 'lazy'}
                             decoding="async"
                             fetchPriority={index === activeIndex ? 'high' : 'auto'}
+                            className={loadedMap[index] ? 'slide-main is-loaded' : 'slide-main is-loading'}
+                            width="1600"
+                            height="1200"
+                            onLoad={() => setLoadedMap((prev) => ({ ...prev, [index]: true }))}
                             onContextMenu={handleContextMenu}
                             onDragStart={handleDragStart}
                             draggable={false}
                         />
+                        </>
                             );
                         })()}
                         <div className="watermark-overlay">

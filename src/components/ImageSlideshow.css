@@ -41,6 +41,29 @@
     background: #ffffff;
 }
 
+.slide-preview {
+    position: absolute;
+    inset: 0;
+    filter: blur(12px);
+    transform: scale(1.04);
+    opacity: 0.9;
+    z-index: 1;
+}
+
+.slide-main {
+    position: relative;
+    z-index: 2;
+    transition: opacity 0.25s ease;
+}
+
+.slide-main.is-loading {
+    opacity: 0;
+}
+
+.slide-main.is-loaded {
+    opacity: 1;
+}
+
 .slideshow-btn {
     position: absolute;
     top: 50%;

@@ -55,7 +55,19 @@ const HomePage = ({ gallery, whatsAppNumber, heroImages = [], heroImageVariants 
                         {heroSlides.map((image, index) => (
                             <div className="hero-slide" key={image}>
                                 {(() => {
-                                    const source = getResponsiveImage(heroImageVariants[index] || image, '100vw');
+                                    const heroVariant = heroImageVariants[index];
+                                    const source = getResponsiveImage(
+                                        heroVariant
+                                            ? {
+                                                ...heroVariant,
+                                                default: heroVariant.medium || heroVariant.md || heroVariant.default || '',
+                                                full: '',
+                                                lg: ''
+                                            }
+                                            : image,
+                                        '100vw',
+                                        { includeFull: false }
+                                    );
                                     return (
                                 <img
                                     src={source.src || resolveImageUrl(image)}
@@ -65,6 +77,8 @@ const HomePage = ({ gallery, whatsAppNumber, heroImages = [], heroImageVariants 
                                     loading={index === 0 ? 'eager' : 'lazy'}
                                     decoding="async"
                                     fetchPriority={index === 0 ? 'high' : 'auto'}
+                                    width="1920"
+                                    height="1080"
                                 />
                                     );
                                 })()}
@@ -136,12 +150,13 @@ const HomePage = ({ gallery, whatsAppNumber, heroImages = [], heroImageVariants 
                     </div>
 
                     <div className="artwork-grid">
-                        {featuredArtworks.map((artwork) => (
+                        {featuredArtworks.map((artwork, index) => (
                             <ArtworkCard
                                 key={artwork._id}
                                 artwork={artwork}
                                 onWhatsAppClick={handleWhatsAppClick}
                                 onViewClick={handleViewClick}
+                                priority={index < 3}
                             />
                         ))}
                     </div>
@@ -173,8 +188,16 @@ const HomePage = ({ gallery, whatsAppNumber, heroImages = [], heroImageVariants 
                             {artistProfile?.image ? (
                                 (() => {
                                     const source = getResponsiveImage(
-                                        artistProfile?.imageVariants || artistProfile?.image,
-                                        '(max-width: 768px) 90vw, 320px'
+                                        artistProfile?.imageVariants
+                                            ? {
+                                                ...artistProfile.imageVariants,
+                                                default: artistProfile.imageVariants.medium || artistProfile.imageVariants.md || artistProfile.imageVariants.default || '',
+                                                full: '',
+                                                lg: ''
+                                            }
+                                            : artistProfile?.image,
+                                        '(max-width: 768px) 90vw, 320px',
+                                        { includeFull: false }
                                     );
                                     return (
                                         <img
@@ -186,6 +209,8 @@ const HomePage = ({ gallery, whatsAppNumber, heroImages = [], heroImageVariants 
                                             loading="eager"
                                             decoding="async"
                                             fetchPriority="high"
+                                            width="800"
+                                            height="1000"
                                         />
                                     );
                                 })()

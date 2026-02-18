@@ -73,7 +73,7 @@ const Modal = ({ isOpen, onClose, artwork, onWhatsAppClick }) => {
                                         const thumbVariant = variant
                                             ? { ...variant, default: variant.small || variant.sm || variant.medium || variant.default }
                                             : images[index];
-                                        const source = getResponsiveImage(thumbVariant, '140px');
+                                        const source = getResponsiveImage(thumbVariant, '140px', { includeFull: false });
                                         return (
                                             <button
                                                 key={index}
@@ -87,6 +87,10 @@ const Modal = ({ isOpen, onClose, artwork, onWhatsAppClick }) => {
                                                     srcSet={source.srcSet || undefined}
                                                     sizes={source.sizes || undefined}
                                                     alt={`${artwork.title} preview ${index + 1}`}
+                                                    loading="lazy"
+                                                    decoding="async"
+                                                    width="320"
+                                                    height="240"
                                                 />
                                             </button>
                                         );

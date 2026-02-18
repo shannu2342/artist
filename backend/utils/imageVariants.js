@@ -1,15 +1,18 @@
 import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp';
+import { fileURLToPath } from 'url';
 
 const FULL_MAX_EDGE = Number(process.env.IMAGE_MAX_EDGE || 2200);
 const SMALL_WIDTH = Number(process.env.IMAGE_SM_WIDTH || 480);
-const MEDIUM_WIDTH = Number(process.env.IMAGE_MD_WIDTH || 1080);
+const MEDIUM_WIDTH = Number(process.env.IMAGE_MD_WIDTH || 960);
 const FULL_WIDTH = Number(process.env.IMAGE_LG_WIDTH || 1800);
-const IMAGE_QUALITY = Number(process.env.AVIF_QUALITY || 62);
-const IMAGE_EFFORT = Number(process.env.AVIF_EFFORT || 6);
+const IMAGE_QUALITY = Number(process.env.AVIF_QUALITY || 58);
+const IMAGE_EFFORT = Number(process.env.AVIF_EFFORT || 5);
 
-const uploadsBaseDir = path.join(process.cwd(), 'public', 'uploads');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const uploadsBaseDir = path.join(__dirname, '..', 'public', 'uploads');
 const smallDir = path.join(uploadsBaseDir, 'small');
 const mediumDir = path.join(uploadsBaseDir, 'medium');
 const fullDir = path.join(uploadsBaseDir, 'full');
@@ -38,7 +41,7 @@ const writeVariant = async ({ inputSource, width, outputPath }) => {
     .avif({
       quality: IMAGE_QUALITY,
       effort: IMAGE_EFFORT,
-      chromaSubsampling: '4:4:4'
+      chromaSubsampling: '4:2:0'
     })
     .toFile(outputPath);
 };
@@ -86,7 +89,7 @@ export const deleteImageVariants = async (variants = {}) => {
 
   for (const relativePath of uniquePaths) {
     if (!relativePath.startsWith('/uploads/')) continue;
-    const filePath = path.join(process.cwd(), 'public', relativePath.replace(/^\/+/, ''));
+    const filePath = path.join(__dirname, '..', 'public', relativePath.replace(/^\/+/, ''));
     if (fs.existsSync(filePath)) {
       try {
         fs.unlinkSync(filePath);

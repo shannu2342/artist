@@ -2,11 +2,14 @@ import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
 import mongoose from 'mongoose';
+import { fileURLToPath } from 'url';
 import Artwork from './models/Artwork.js';
 import connectDB from './config/db.js';
 import { uploadImageWithVariants } from './utils/imageVariants.js';
 
 dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const migrate = async () => {
   try {
@@ -27,24 +30,13 @@ const migrate = async () => {
       const existingVariants = artwork.imageVariants || [];
       for (let index = 0; index < (artwork.images || []).length; index += 1) {
         const imagePath = artwork.images[index];
-        if (imagePath.startsWith('/api/files/')) {
-          newImages.push(imagePath);
-          if (existingVariants[index]) {
-            newImageVariants.push(existingVariants[index]);
-          } else {
-            newImageVariants.push({
-              default: imagePath,
-              sm: '',
-              md: '',
-              lg: imagePath
-            });
-          }
+        if (typeof imagePath !== 'string' || imagePath.startsWith('/api/')) {
           continue;
         }
 
         const diskPath = imagePath.startsWith('/uploads/')
-          ? path.join(process.cwd(), 'public', imagePath)
-          : path.join(process.cwd(), 'public', 'uploads', imagePath);
+          ? path.join(__dirname, 'public', imagePath.replace(/^\/+/, ''))
+          : path.join(__dirname, 'public', 'uploads', imagePath);
 
         if (!fs.existsSync(diskPath)) {
           console.log(`Missing file for ${artwork._id}: ${imagePath}`);

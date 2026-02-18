@@ -39,12 +39,13 @@ const GalleryPage = ({
             <section className="gallery-grid-section">
                 <div className="container">
                     <div className="gallery-grid">
-                        {gallery.map((artwork) => (
+                        {gallery.map((artwork, index) => (
                             <ArtworkCard
                                 key={artwork._id}
                                 artwork={artwork}
                                 onWhatsAppClick={handleWhatsAppClick}
                                 onViewClick={handleViewClick}
+                                priority={index < 6}
                             />
                         ))}
                     </div>

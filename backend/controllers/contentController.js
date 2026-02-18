@@ -2,6 +2,34 @@ import Content from '../models/Content.js';
 import fs from 'fs';
 import { uploadImageWithVariants } from '../utils/imageVariants.js';
 
+const normalizeVariant = (variant = {}) => ({
+  ...variant,
+  default: variant.medium || variant.md || variant.default || '',
+  small: variant.small || variant.sm || '',
+  medium: variant.medium || variant.md || variant.default || '',
+  full: variant.full || variant.lg || variant.default || '',
+  sm: variant.small || variant.sm || '',
+  md: variant.medium || variant.md || variant.default || '',
+  lg: variant.full || variant.lg || variant.default || ''
+});
+
+const sanitizeContentForResponse = (contentDoc) => {
+  const content = typeof contentDoc.toObject === 'function' ? contentDoc.toObject() : { ...contentDoc };
+  const heroVariants = (content.heroImageVariants || []).map(normalizeVariant);
+  const artistVariant = normalizeVariant(content.artistProfile?.imageVariants || {});
+
+  return {
+    ...content,
+    heroImageVariants: heroVariants,
+    heroImages: heroVariants.map(v => v.medium || v.default).filter(Boolean),
+    artistProfile: {
+      ...(content.artistProfile || {}),
+      image: artistVariant.medium || artistVariant.default || '',
+      imageVariants: artistVariant
+    }
+  };
+};
+
 const getOrCreateContent = async () => {
   let content = await Content.findOne();
   if (!content) {
@@ -12,7 +40,7 @@ const getOrCreateContent = async () => {
 
 export const getContent = async (req, res) => {
   const content = await getOrCreateContent();
-  return res.json(content);
+  return res.json(sanitizeContentForResponse(content));
 };
 
 export const updateContent = async (req, res) => {
@@ -22,7 +50,7 @@ export const updateContent = async (req, res) => {
   Object.assign(content, updates);
   await content.save();
 
-  return res.json(content);
+  return res.json(sanitizeContentForResponse(content));
 };
 
 export const updateHeroImages = async (req, res) => {
@@ -46,7 +74,7 @@ export const updateHeroImages = async (req, res) => {
   content.heroImageVariants = variants;
   await content.save();
 
-  return res.json(content);
+  return res.json(sanitizeContentForResponse(content));
 };
 
 export const deleteHeroImage = async (req, res) => {
@@ -78,7 +106,7 @@ export const deleteHeroImage = async (req, res) => {
   }
   await content.save();
 
-  return res.json(content);
+  return res.json(sanitizeContentForResponse(content));
 };
 
 export const updateArtistProfile = async (req, res) => {
@@ -98,5 +126,5 @@ export const updateArtistProfile = async (req, res) => {
   }
 
   await content.save();
-  return res.json(content);
+  return res.json(sanitizeContentForResponse(content));
 };

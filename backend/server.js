@@ -6,8 +6,8 @@ import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import artworkRoutes from './routes/artworkRoutes.js';
 import contentRoutes from './routes/contentRoutes.js';
-import fileRoutes from './routes/fileRoutes.js';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import bcrypt from 'bcryptjs';
 import Admin from './models/Admin.js';
 
@@ -19,7 +19,8 @@ const port = process.env.PORT || 5000;
 const defaultAllowedOrigins = [
   'http://localhost:3000',
   'http://localhost:5173',
-  'http://localhost:4173'
+  'http://localhost:4173',
+  'https://artist-rust.vercel.app'
 ];
 
 const envAllowedOrigins = (process.env.FRONTEND_URLS || process.env.FRONTEND_URL || '')
@@ -28,20 +29,62 @@ const envAllowedOrigins = (process.env.FRONTEND_URLS || process.env.FRONTEND_URL
   .filter(Boolean);
 
 const allowedOrigins = [...new Set([...defaultAllowedOrigins, ...envAllowedOrigins])];
+const allowAllCors = process.env.CORS_ALLOW_ALL !== 'false';
 
-app.use(cors({
+const isOriginAllowed = (origin) => {
+  if (!origin) return true;
+  if (allowAllCors) return true;
+  const normalizedOrigin = origin.replace(/\/$/, '');
+  if (allowedOrigins.includes(normalizedOrigin)) return true;
+
+  // Allow Vercel preview domains of explicitly configured Vercel projects
+  const configuredVercelHosts = allowedOrigins
+    .filter((allowed) => allowed.includes('.vercel.app'))
+    .map((allowed) => {
+      try {
+        return new URL(allowed).hostname;
+      } catch {
+        return '';
+      }
+    })
+    .filter(Boolean);
+
+  try {
+    const host = new URL(normalizedOrigin).hostname;
+    if (host.endsWith('.vercel.app')) {
+      if (process.env.ALLOW_VERCEL_PREVIEWS !== 'false') {
+        return true;
+      }
+      return configuredVercelHosts.some((baseHost) => host === baseHost || host.startsWith(`${baseHost.split('.vercel.app')[0]}-`));
+    }
+  } catch {
+    return false;
+  }
+
+  return false;
+};
+
+const corsOptions = {
   origin: (origin, callback) => {
-    const normalizedOrigin = origin ? origin.replace(/\/$/, '') : origin;
-    if (!origin || allowedOrigins.includes(normalizedOrigin)) {
+    if (isOriginAllowed(origin)) {
       return callback(null, true);
     }
-    return callback(new Error('CORS not allowed'), false);
-  }
-}));
+    return callback(null, false);
+  },
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: false,
+  optionsSuccessStatus: 204
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(express.json({ limit: '5mb' }));
 app.use(morgan('dev'));
 
-const publicDir = path.join(process.cwd(), 'public');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const publicDir = path.join(__dirname, 'public');
 const uploadsDir = path.join(publicDir, 'uploads');
 
 // Serve static files from public folder
@@ -58,7 +101,6 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/artworks', artworkRoutes);
 app.use('/api/content', contentRoutes);
-app.use('/api/files', fileRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err);
