@@ -2,16 +2,26 @@ import Artwork from '../models/Artwork.js';
 import fs from 'fs';
 import { deleteImageVariants, uploadImageWithVariants } from '../utils/imageVariants.js';
 
-const normalizeVariant = (variant = {}) => ({
-  ...variant,
-  default: variant.medium || variant.md || variant.default || '',
-  small: variant.small || variant.sm || '',
-  medium: variant.medium || variant.md || variant.default || '',
-  full: variant.full || variant.lg || variant.default || '',
-  sm: variant.small || variant.sm || '',
-  md: variant.medium || variant.md || variant.default || '',
-  lg: variant.full || variant.lg || variant.default || ''
-});
+const safeUploadPath = (value = '') => (
+  typeof value === 'string' && value.startsWith('/uploads/') ? value : ''
+);
+
+const normalizeVariant = (variant = {}) => {
+  const small = safeUploadPath(variant.small || variant.sm || '');
+  const medium = safeUploadPath(variant.medium || variant.md || variant.default || '');
+  const full = safeUploadPath(variant.full || variant.lg || variant.default || '');
+
+  return {
+    ...variant,
+    default: medium || full || small || '',
+    small,
+    medium,
+    full,
+    sm: small,
+    md: medium,
+    lg: full
+  };
+};
 
 const sanitizeArtworkForResponse = (artworkDoc) => {
   const artwork = typeof artworkDoc.toObject === 'function' ? artworkDoc.toObject() : { ...artworkDoc };
