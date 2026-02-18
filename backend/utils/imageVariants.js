@@ -1,29 +1,98 @@
-import { uploadBuffer } from './gridfs.js';
-import { optimizeImageVariantsToAvif } from './imageProcessor.js';
+import fs from 'fs';
+import path from 'path';
+import sharp from 'sharp';
 
-const buildFilePath = (id) => `/api/files/${id}`;
+const FULL_MAX_EDGE = Number(process.env.IMAGE_MAX_EDGE || 2200);
+const SMALL_WIDTH = Number(process.env.IMAGE_SM_WIDTH || 480);
+const MEDIUM_WIDTH = Number(process.env.IMAGE_MD_WIDTH || 1080);
+const FULL_WIDTH = Number(process.env.IMAGE_LG_WIDTH || 1800);
+const IMAGE_QUALITY = Number(process.env.AVIF_QUALITY || 62);
+const IMAGE_EFFORT = Number(process.env.AVIF_EFFORT || 6);
 
-export const uploadImageWithVariants = async (buffer, originalName) => {
-  const optimized = await optimizeImageVariantsToAvif(buffer, originalName);
+const uploadsBaseDir = path.join(process.cwd(), 'public', 'uploads');
+const smallDir = path.join(uploadsBaseDir, 'small');
+const mediumDir = path.join(uploadsBaseDir, 'medium');
+const fullDir = path.join(uploadsBaseDir, 'full');
 
-  const [smId, mdId, lgId] = await Promise.all([
-    uploadBuffer(optimized.sm),
-    uploadBuffer(optimized.md),
-    uploadBuffer(optimized.lg)
+for (const dir of [smallDir, mediumDir, fullDir]) {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+}
+
+const safeBaseName = (originalName = 'image') => {
+  const extless = path.parse(originalName).name || 'image';
+  const normalized = extless.replace(/[^a-zA-Z0-9-_]/g, '_');
+  return `${Date.now()}-${Math.round(Math.random() * 1e9)}-${normalized}`;
+};
+
+const writeVariant = async ({ inputSource, width, outputPath }) => {
+  await sharp(inputSource, { failOn: 'none' })
+    .rotate()
+    .resize({
+      width,
+      height: width,
+      fit: 'inside',
+      withoutEnlargement: true
+    })
+    .avif({
+      quality: IMAGE_QUALITY,
+      effort: IMAGE_EFFORT,
+      chromaSubsampling: '4:4:4'
+    })
+    .toFile(outputPath);
+};
+
+export const uploadImageWithVariants = async (inputSource, originalName) => {
+  const baseName = safeBaseName(originalName);
+
+  const smallFile = `${baseName}-small.avif`;
+  const mediumFile = `${baseName}-medium.avif`;
+  const fullFile = `${baseName}-full.avif`;
+
+  const smallOutput = path.join(smallDir, smallFile);
+  const mediumOutput = path.join(mediumDir, mediumFile);
+  const fullOutput = path.join(fullDir, fullFile);
+
+  await Promise.all([
+    writeVariant({ inputSource, width: SMALL_WIDTH, outputPath: smallOutput }),
+    writeVariant({ inputSource, width: MEDIUM_WIDTH, outputPath: mediumOutput }),
+    writeVariant({ inputSource, width: FULL_WIDTH > FULL_MAX_EDGE ? FULL_MAX_EDGE : FULL_WIDTH, outputPath: fullOutput })
   ]);
 
   return {
-    default: buildFilePath(lgId),
-    sm: buildFilePath(smId),
-    md: buildFilePath(mdId),
-    lg: buildFilePath(lgId)
+    default: `/uploads/medium/${mediumFile}`,
+    small: `/uploads/small/${smallFile}`,
+    medium: `/uploads/medium/${mediumFile}`,
+    full: `/uploads/full/${fullFile}`,
+    sm: `/uploads/small/${smallFile}`,
+    md: `/uploads/medium/${mediumFile}`,
+    lg: `/uploads/full/${fullFile}`
   };
 };
 
-export const srcSetFromVariants = (variants = {}) => {
-  const parts = [];
-  if (variants.sm) parts.push(`${variants.sm} 640w`);
-  if (variants.md) parts.push(`${variants.md} 1080w`);
-  if (variants.lg) parts.push(`${variants.lg} 1600w`);
-  return parts.join(', ');
+export const deleteImageVariants = async (variants = {}) => {
+  const uniquePaths = new Set(
+    [
+      variants.default,
+      variants.small,
+      variants.medium,
+      variants.full,
+      variants.sm,
+      variants.md,
+      variants.lg
+    ].filter(Boolean)
+  );
+
+  for (const relativePath of uniquePaths) {
+    if (!relativePath.startsWith('/uploads/')) continue;
+    const filePath = path.join(process.cwd(), 'public', relativePath.replace(/^\/+/, ''));
+    if (fs.existsSync(filePath)) {
+      try {
+        fs.unlinkSync(filePath);
+      } catch (error) {
+        console.error('Error deleting image variant:', error.message);
+      }
+    }
+  }
 };

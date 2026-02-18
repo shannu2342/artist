@@ -14,16 +14,6 @@ const ArtworkCard = ({ artwork, onWhatsAppClick, onViewClick }) => {
         setCurrentIndex(0);
     }, [artwork._id]);
 
-    useEffect(() => {
-        const entries = variants.length > 0 ? variants : images;
-        entries.forEach((image) => {
-            const preloaded = new Image();
-            preloaded.decoding = 'async';
-            const source = getResponsiveImage(image);
-            preloaded.src = source.src || resolveImageUrl(typeof image === 'string' ? image : '');
-        });
-    }, [images, variants]);
-
     const handleContextMenu = (e) => {
         e.preventDefault();
         return false;
@@ -92,9 +82,9 @@ const ArtworkCard = ({ artwork, onWhatsAppClick, onViewClick }) => {
                     sizes={source.sizes || undefined}
                     alt={artwork.title}
                     className="artwork-image"
-                    loading="eager"
+                    loading="lazy"
                     decoding="async"
-                    fetchPriority="high"
+                    fetchPriority="auto"
                     onContextMenu={handleContextMenu}
                     onDragStart={handleDragStart}
                     draggable={false}

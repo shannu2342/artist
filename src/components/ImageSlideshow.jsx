@@ -3,7 +3,7 @@ import './ImageSlideshow.css';
 import watermarkLogo from '../assets/logo2.png';
 import { getResponsiveImage, resolveImageUrl } from '../utils/api';
 
-const ImageSlideshow = ({ images, imageVariants = [], alt, currentIndex, onIndexChange }) => {
+const ImageSlideshow = ({ images, imageVariants = [], alt, currentIndex, onIndexChange, quality = 'medium' }) => {
     const [internalCurrentIndex, setInternalCurrentIndex] = useState(0);
     const activeIndex = typeof currentIndex === 'number' ? currentIndex : internalCurrentIndex;
 
@@ -57,10 +57,16 @@ const ImageSlideshow = ({ images, imageVariants = [], alt, currentIndex, onIndex
                         className={`slide ${index === activeIndex ? 'active' : ''}`}
                     >
                         {(() => {
-                            const source = getResponsiveImage(
-                                imageVariants[index] || image,
-                                '(max-width: 768px) 100vw, 80vw'
-                            );
+                            const variant = imageVariants[index];
+                            const variantForQuality = variant
+                                ? {
+                                    ...variant,
+                                    default: quality === 'full'
+                                        ? (variant.full || variant.lg || variant.default || variant.medium)
+                                        : (variant.medium || variant.md || variant.default || variant.full)
+                                }
+                                : image;
+                            const source = getResponsiveImage(variantForQuality, '(max-width: 768px) 100vw, 80vw');
                             return (
                         <img
                             src={source.src || resolveImageUrl(image)}

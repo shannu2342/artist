@@ -21,7 +21,6 @@ import EditWhatsApp from './pages/EditWhatsApp';
 import EditHero from './pages/EditHero';
 import EditArtistProfile from './pages/EditArtistProfile';
 import { apiUrl } from './utils/api';
-import { preloadImageUrls } from './utils/imagePerformance';
 
 const App = () => {
     const [whatsAppNumber, setWhatsAppNumber] = useState('919876543210');
@@ -33,20 +32,42 @@ const App = () => {
     const [heroImageVariants, setHeroImageVariants] = useState([]);
     const [artistProfile, setArtistProfile] = useState({ name: 'Aurexon', bio: '', image: '' });
     const [adminLoggedIn, setAdminLoggedIn] = useState(false);
+    const [artworksPage, setArtworksPage] = useState(1);
+    const [hasMoreArtworks, setHasMoreArtworks] = useState(false);
+    const [loadingMoreArtworks, setLoadingMoreArtworks] = useState(false);
+
+    const fetchArtworksPage = async ({ page = 1, reset = false } = {}) => {
+        try {
+            const response = await fetch(apiUrl(`/api/artworks?page=${page}&limit=12`));
+            if (!response.ok) {
+                return;
+            }
+
+            const data = await response.json();
+            const items = Array.isArray(data?.items) ? data.items : [];
+            setGallery((prev) => (reset ? items : [...prev, ...items]));
+            setArtworksPage(page);
+            setHasMoreArtworks(Boolean(data?.hasMore));
+        } catch (error) {
+            console.error('Error fetching artworks:', error);
+        }
+    };
+
+    const fetchAllArtworksForAdmin = async () => {
+        try {
+            const response = await fetch(apiUrl('/api/artworks'));
+            if (!response.ok) return;
+            const items = await response.json();
+            if (Array.isArray(items)) {
+                setGallery(items);
+                setHasMoreArtworks(false);
+            }
+        } catch (error) {
+            console.error('Error fetching full artworks list for admin:', error);
+        }
+    };
 
     useEffect(() => {
-        const fetchArtworks = async () => {
-            try {
-                const response = await fetch(apiUrl('/api/artworks'));
-                if (response.ok) {
-                    const artworks = await response.json();
-                    setGallery(Array.isArray(artworks) ? artworks : []);
-                }
-            } catch (error) {
-                console.error('Error fetching artworks:', error);
-            }
-        };
-
         const fetchContent = async () => {
             try {
                 const response = await fetch(apiUrl('/api/content'));
@@ -76,29 +97,22 @@ const App = () => {
             }
         };
 
-        fetchArtworks();
+        fetchArtworksPage({ page: 1, reset: true });
         fetchContent();
 
         const savedAdminLoggedIn = localStorage.getItem('adminLoggedIn');
         if (savedAdminLoggedIn === 'true') {
             setAdminLoggedIn(true);
+            fetchAllArtworksForAdmin();
         }
     }, []);
 
-    useEffect(() => {
-        const artworkCovers = gallery.map((art) => (
-            art.imageVariants && art.imageVariants[0]
-                ? art.imageVariants[0]
-                : (art.images && art.images[0] ? art.images[0] : art.image)
-        ));
-        const importantImages = [
-            ...(heroImageVariants.length > 0 ? heroImageVariants : heroImages),
-            artistProfile?.imageVariants || artistProfile?.image,
-            ...artworkCovers
-        ];
-
-        preloadImageUrls(importantImages, 30);
-    }, [gallery, heroImages, heroImageVariants, artistProfile?.image, artistProfile?.imageVariants]);
+    const loadMoreArtworks = async () => {
+        if (loadingMoreArtworks || !hasMoreArtworks) return;
+        setLoadingMoreArtworks(true);
+        await fetchArtworksPage({ page: artworksPage + 1, reset: false });
+        setLoadingMoreArtworks(false);
+    };
 
     const addArtwork = async (artwork) => {
         try {
@@ -308,6 +322,7 @@ const App = () => {
     const loginAdmin = () => {
         setAdminLoggedIn(true);
         localStorage.setItem('adminLoggedIn', 'true');
+        fetchAllArtworksForAdmin();
     };
 
     const logoutAdmin = () => {
@@ -351,6 +366,9 @@ const App = () => {
                         <GalleryPage
                             gallery={gallery}
                             whatsAppNumber={whatsAppNumber}
+                            hasMoreArtworks={hasMoreArtworks}
+                            loadingMoreArtworks={loadingMoreArtworks}
+                            onLoadMoreArtworks={loadMoreArtworks}
                         />
                     } />
                     <Route path="/admin/login" element={

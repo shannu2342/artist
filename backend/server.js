@@ -46,7 +46,10 @@ const uploadsDir = path.join(publicDir, 'uploads');
 
 // Serve static files from public folder
 app.use(express.static(publicDir));
-app.use('/uploads', express.static(uploadsDir));
+app.use('/uploads', express.static(uploadsDir, {
+  maxAge: '365d',
+  immutable: true
+}));
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });

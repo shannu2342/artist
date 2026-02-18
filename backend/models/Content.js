@@ -20,6 +20,9 @@ const contentSchema = new mongoose.Schema(
       type: [
         {
           default: { type: String, default: '' },
+          small: { type: String, default: '' },
+          medium: { type: String, default: '' },
+          full: { type: String, default: '' },
           sm: { type: String, default: '' },
           md: { type: String, default: '' },
           lg: { type: String, default: '' }
@@ -33,6 +36,9 @@ const contentSchema = new mongoose.Schema(
       image: { type: String, default: '' },
       imageVariants: {
         default: { type: String, default: '' },
+        small: { type: String, default: '' },
+        medium: { type: String, default: '' },
+        full: { type: String, default: '' },
         sm: { type: String, default: '' },
         md: { type: String, default: '' },
         lg: { type: String, default: '' }

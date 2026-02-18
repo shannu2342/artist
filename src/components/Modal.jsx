@@ -53,6 +53,7 @@ const Modal = ({ isOpen, onClose, artwork, onWhatsAppClick }) => {
                             alt={artwork.title}
                             currentIndex={currentIndex}
                             onIndexChange={setCurrentIndex}
+                            quality="full"
                         />
                     </div>
 
@@ -68,7 +69,11 @@ const Modal = ({ isOpen, onClose, artwork, onWhatsAppClick }) => {
                                 <h4>All Images</h4>
                                 <div className="modal-thumb-grid">
                                     {images.map((_, index) => {
-                                        const source = getResponsiveImage(imageVariants[index] || images[index], '140px');
+                                        const variant = imageVariants[index];
+                                        const thumbVariant = variant
+                                            ? { ...variant, default: variant.small || variant.sm || variant.medium || variant.default }
+                                            : images[index];
+                                        const source = getResponsiveImage(thumbVariant, '140px');
                                         return (
                                             <button
                                                 key={index}

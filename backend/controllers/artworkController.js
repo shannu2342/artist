@@ -1,8 +1,26 @@
 import Artwork from '../models/Artwork.js';
-import { deleteFile } from '../utils/gridfs.js';
-import { uploadImageWithVariants } from '../utils/imageVariants.js';
+import fs from 'fs';
+import { deleteImageVariants, uploadImageWithVariants } from '../utils/imageVariants.js';
 
 export const listArtworks = async (req, res) => {
+  const page = Number(req.query.page || 1);
+  const limit = Math.min(Number(req.query.limit || 0), 50);
+
+  if (page > 0 && limit > 0) {
+    const skip = (page - 1) * limit;
+    const [items, total] = await Promise.all([
+      Artwork.find().sort({ order: 1, createdAt: -1 }).skip(skip).limit(limit),
+      Artwork.countDocuments()
+    ]);
+    return res.json({
+      items,
+      page,
+      limit,
+      total,
+      hasMore: skip + items.length < total
+    });
+  }
+
   const artworks = await Artwork.find().sort({ order: 1, createdAt: -1 });
   return res.json(artworks);
 };
@@ -22,10 +40,14 @@ export const createArtwork = async (req, res) => {
     // Create image paths from uploaded files
     const variants = await Promise.all(
       req.files.map(async (file) => {
-        return uploadImageWithVariants(file.buffer, file.originalname);
+        const result = await uploadImageWithVariants(file.path, file.originalname);
+        if (file.path && fs.existsSync(file.path)) {
+          fs.unlinkSync(file.path);
+        }
+        return result;
       })
     );
-    const imageUrls = variants.map(item => item.default);
+    const imageUrls = variants.map(item => item.medium || item.default);
 
     const artwork = await Artwork.create({
       title,
@@ -70,10 +92,14 @@ export const updateArtwork = async (req, res) => {
     if (req.files && req.files.length > 0) {
       const newVariantEntries = await Promise.all(
         req.files.map(async (file) => {
-          return uploadImageWithVariants(file.buffer, file.originalname);
+          const result = await uploadImageWithVariants(file.path, file.originalname);
+          if (file.path && fs.existsSync(file.path)) {
+            fs.unlinkSync(file.path);
+          }
+          return result;
         })
       );
-      const newImages = newVariantEntries.map(item => item.default);
+      const newImages = newVariantEntries.map(item => item.medium || item.default);
       artwork.images = [...artwork.images, ...newImages];
       artwork.imageVariants = [...(artwork.imageVariants || []), ...newVariantEntries];
     }
@@ -94,24 +120,9 @@ export const deleteArtwork = async (req, res) => {
       return res.status(404).json({ message: 'Artwork not found' });
     }
 
-    // Delete uploaded images from GridFS
-    const imagePaths = new Set(artwork.images || []);
+    // Delete uploaded images from disk storage
     for (const variants of artwork.imageVariants || []) {
-      if (variants?.default) imagePaths.add(variants.default);
-      if (variants?.sm) imagePaths.add(variants.sm);
-      if (variants?.md) imagePaths.add(variants.md);
-      if (variants?.lg) imagePaths.add(variants.lg);
-    }
-
-    for (const imagePath of imagePaths) {
-      const match = String(imagePath).match(/\/api\/files\/(.+)$/);
-      if (match && match[1]) {
-        try {
-          await deleteFile(match[1]);
-        } catch (err) {
-          console.error('Error deleting file from GridFS:', err.message);
-        }
-      }
+      await deleteImageVariants(variants);
     }
 
     return res.json({ message: 'Artwork deleted' });

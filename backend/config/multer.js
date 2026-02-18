@@ -1,4 +1,11 @@
 import multer from 'multer';
+import fs from 'fs';
+import path from 'path';
+
+const tempDir = path.join(process.cwd(), 'tmp-uploads');
+if (!fs.existsSync(tempDir)) {
+    fs.mkdirSync(tempDir, { recursive: true });
+}
 
 // File filter to accept only images
 const fileFilter = (req, file, cb) => {
@@ -11,10 +18,16 @@ const fileFilter = (req, file, cb) => {
 
 // Create the upload instance
 const upload = multer({
-    storage: multer.memoryStorage(),
+    storage: multer.diskStorage({
+        destination: (req, file, cb) => cb(null, tempDir),
+        filename: (req, file, cb) => {
+            const safeName = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+            cb(null, `${safeName}${path.extname(file.originalname || '')}`);
+        }
+    }),
     fileFilter: fileFilter,
     limits: {
-        fileSize: 25 * 1024 * 1024 // 25MB limit for high-res uploads before optimization
+        fileSize: 20 * 1024 * 1024 // 20MB limit to keep memory and CPU stable
     }
 });
 

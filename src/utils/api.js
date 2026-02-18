@@ -1,18 +1,15 @@
-export const API_BASE = import.meta.env.VITE_API_URL || 'https://artist-portfoilo.onrender.com';
+export const API_BASE = (import.meta.env.VITE_API_URL || '').trim();
 
 export const apiUrl = (path = '') => {
-  if (!path) return API_BASE;
-  return `${API_BASE}${path.startsWith('/') ? '' : '/'}${path}`;
+  if (!path) return API_BASE || '';
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  return API_BASE ? `${API_BASE}${normalizedPath}` : normalizedPath;
 };
 
 export const resolveImageUrl = (url = '') => {
   if (!url) return url;
   if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:')) {
     return url;
-  }
-  if (url.startsWith('/uploads/')) {
-    const filename = url.replace('/uploads/', '');
-    return apiUrl(`/api/files/name/${encodeURIComponent(filename)}`);
   }
   return apiUrl(encodeURI(url));
 };
@@ -30,10 +27,19 @@ export const getResponsiveImage = (imageOrVariants, sizes = '100vw') => {
     };
   }
 
-  const sm = resolveImageUrl(imageOrVariants.sm || '');
-  const md = resolveImageUrl(imageOrVariants.md || '');
-  const lg = resolveImageUrl(imageOrVariants.lg || imageOrVariants.default || '');
-  const src = resolveImageUrl(imageOrVariants.default || imageOrVariants.lg || imageOrVariants.md || imageOrVariants.sm || '');
+  const sm = resolveImageUrl(imageOrVariants.small || imageOrVariants.sm || '');
+  const md = resolveImageUrl(imageOrVariants.medium || imageOrVariants.md || '');
+  const lg = resolveImageUrl(imageOrVariants.full || imageOrVariants.lg || imageOrVariants.default || '');
+  const src = resolveImageUrl(
+    imageOrVariants.medium ||
+    imageOrVariants.default ||
+    imageOrVariants.full ||
+    imageOrVariants.md ||
+    imageOrVariants.lg ||
+    imageOrVariants.small ||
+    imageOrVariants.sm ||
+    ''
+  );
 
   const srcSet = [
     sm ? `${sm} 640w` : '',

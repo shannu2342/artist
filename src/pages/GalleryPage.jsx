@@ -3,7 +3,13 @@ import ArtworkCard from '../components/ArtworkCard';
 import Modal from '../components/Modal';
 import './GalleryPage.css';
 
-const GalleryPage = ({ gallery, whatsAppNumber }) => {
+const GalleryPage = ({
+    gallery,
+    whatsAppNumber,
+    hasMoreArtworks = false,
+    loadingMoreArtworks = false,
+    onLoadMoreArtworks
+}) => {
     const [selectedArtwork, setSelectedArtwork] = useState(null);
 
     const handleWhatsAppClick = (artwork) => {
@@ -48,6 +54,19 @@ const GalleryPage = ({ gallery, whatsAppNumber }) => {
                             <i className="fas fa-images"></i>
                             <h3>No Artworks Yet</h3>
                             <p>Check back soon for new additions to the gallery</p>
+                        </div>
+                    )}
+
+                    {gallery.length > 0 && hasMoreArtworks && (
+                        <div className="gallery-load-more">
+                            <button
+                                type="button"
+                                className="gallery-load-more-btn"
+                                onClick={onLoadMoreArtworks}
+                                disabled={loadingMoreArtworks}
+                            >
+                                {loadingMoreArtworks ? 'Loading...' : 'Load More Artworks'}
+                            </button>
                         </div>
                     )}
                 </div>

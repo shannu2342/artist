@@ -1,4 +1,5 @@
 import Content from '../models/Content.js';
+import fs from 'fs';
 import { uploadImageWithVariants } from '../utils/imageVariants.js';
 
 const getOrCreateContent = async () => {
@@ -33,10 +34,14 @@ export const updateHeroImages = async (req, res) => {
 
   const variants = await Promise.all(
     req.files.map(async (file) => {
-      return uploadImageWithVariants(file.buffer, file.originalname);
+      const result = await uploadImageWithVariants(file.path, file.originalname);
+      if (file.path && fs.existsSync(file.path)) {
+        fs.unlinkSync(file.path);
+      }
+      return result;
     })
   );
-  const images = variants.map(item => item.default);
+  const images = variants.map(item => item.medium || item.default);
   content.heroImages = images;
   content.heroImageVariants = variants;
   await content.save();
@@ -84,8 +89,11 @@ export const updateArtistProfile = async (req, res) => {
   if (bio !== undefined) content.artistProfile.bio = bio;
 
   if (req.file) {
-    const variants = await uploadImageWithVariants(req.file.buffer, req.file.originalname);
-    content.artistProfile.image = variants.default;
+    const variants = await uploadImageWithVariants(req.file.path, req.file.originalname);
+    if (req.file.path && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+    content.artistProfile.image = variants.medium || variants.default;
     content.artistProfile.imageVariants = variants;
   }
 
