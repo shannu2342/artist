@@ -10,6 +10,7 @@ const AddPainting = () => {
     const [paintingDescription, setPaintingDescription] = useState('');
     const [featured, setFeatured] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
 
     const handleImageSelect = (e) => {
         const files = Array.from(e.target.files);
@@ -23,6 +24,7 @@ const AddPainting = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (isUploading) return;
 
         if (selectedImages.length === 0 || !paintingName) {
             alert('Please select at least one image and enter a painting name');
@@ -48,13 +50,18 @@ const AddPainting = () => {
         });
 
         try {
+            setIsUploading(true);
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 60000);
             const response = await fetch(apiUrl('/api/artworks'), {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`
                 },
-                body: formData
+                body: formData,
+                signal: controller.signal
             });
+            clearTimeout(timeout);
 
             if (response.ok) {
                 setShowSuccess(true);
@@ -73,7 +80,11 @@ const AddPainting = () => {
             }
         } catch (error) {
             console.error('Error uploading painting:', error);
-            alert(error?.message || 'Error uploading painting');
+            alert(error?.name === 'AbortError'
+                ? 'Upload timed out. Please try a smaller image or retry.'
+                : (error?.message || 'Error uploading painting'));
+        } finally {
+            setIsUploading(false);
         }
     };
 
@@ -214,9 +225,9 @@ const AddPainting = () => {
                                 <i className="fas fa-times"></i>
                                 <span>Cancel</span>
                             </button>
-                            <button type="submit" className="save-btn">
+                            <button type="submit" className="save-btn" disabled={isUploading}>
                                 <i className="fas fa-save"></i>
-                                <span>Save Painting</span>
+                                <span>{isUploading ? 'Uploading...' : 'Save Painting'}</span>
                             </button>
                         </div>
                     </form>
