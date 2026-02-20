@@ -7,8 +7,8 @@ const FULL_MAX_EDGE = Number(process.env.IMAGE_MAX_EDGE || 2200);
 const SMALL_WIDTH = Number(process.env.IMAGE_SM_WIDTH || 480);
 const MEDIUM_WIDTH = Number(process.env.IMAGE_MD_WIDTH || 960);
 const FULL_WIDTH = Number(process.env.IMAGE_LG_WIDTH || 1800);
-const IMAGE_QUALITY = Number(process.env.AVIF_QUALITY || 58);
-const IMAGE_EFFORT = Number(process.env.AVIF_EFFORT || 5);
+const IMAGE_QUALITY = Number(process.env.AVIF_QUALITY || 52);
+const IMAGE_EFFORT = Number(process.env.AVIF_EFFORT || 2);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

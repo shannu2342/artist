@@ -67,7 +67,7 @@ const EditPainting = () => {
         try {
             setIsUploading(true);
             const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 60000);
+            const timeout = setTimeout(() => controller.abort(), 180000);
             const response = await fetch(apiUrl(`/api/artworks/${painting._id}`), {
                 method: 'PUT',
                 headers: {
