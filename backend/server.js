@@ -116,6 +116,14 @@ app.use('/api/content', contentRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err);
+  if (err?.name === 'MulterError') {
+    return res.status(400).json({ message: err.message });
+  }
+  if (typeof err?.message === 'string' && err.message) {
+    if (err.message.includes('Only image files are allowed')) {
+      return res.status(400).json({ message: err.message });
+    }
+  }
   res.status(500).json({ message: 'Server error' });
 });
 

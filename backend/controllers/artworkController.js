@@ -97,7 +97,7 @@ export const createArtwork = async (req, res) => {
     return res.status(201).json(sanitizeArtworkForResponse(artwork));
   } catch (error) {
     console.error('Error creating artwork:', error);
-    return res.status(500).json({ message: 'Server error' });
+    return res.status(500).json({ message: error?.message || 'Server error' });
   }
 };
 
@@ -143,7 +143,7 @@ export const updateArtwork = async (req, res) => {
     return res.json(sanitizeArtworkForResponse(artwork));
   } catch (error) {
     console.error('Error updating artwork:', error);
-    return res.status(500).json({ message: 'Server error' });
+    return res.status(500).json({ message: error?.message || 'Server error' });
   }
 };
 

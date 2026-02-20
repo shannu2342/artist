@@ -1,8 +1,11 @@
 import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 
-const tempDir = path.join(process.cwd(), 'tmp-uploads');
+const tempDir = process.env.TMP_UPLOADS_DIR
+    ? path.resolve(process.env.TMP_UPLOADS_DIR)
+    : path.join(os.tmpdir(), 'artist-tmp-uploads');
 if (!fs.existsSync(tempDir)) {
     fs.mkdirSync(tempDir, { recursive: true });
 }

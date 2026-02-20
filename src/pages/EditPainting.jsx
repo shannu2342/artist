@@ -44,6 +44,13 @@ const EditPainting = () => {
             return;
         }
 
+        const token = localStorage.getItem('adminToken');
+        if (!token) {
+            alert('Admin session expired. Please login again.');
+            navigate('/admin/login');
+            return;
+        }
+
         const formData = new FormData();
         formData.append('title', paintingName);
         formData.append('description', paintingDescription);
@@ -59,7 +66,7 @@ const EditPainting = () => {
             const response = await fetch(apiUrl(`/api/artworks/${painting._id}`), {
                 method: 'PUT',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    'Authorization': `Bearer ${token}`
                 },
                 body: formData
             });
@@ -72,11 +79,12 @@ const EditPainting = () => {
                     setShowSuccess(false);
                 }, 2000);
             } else {
-                alert('Error updating painting');
+                const data = await response.json().catch(() => ({}));
+                alert(data.message || `Error updating painting (HTTP ${response.status})`);
             }
         } catch (error) {
             console.error('Error updating painting:', error);
-            alert('Error updating painting');
+            alert(error?.message || 'Error updating painting');
         }
     };
 
